@@ -1,97 +1,95 @@
-var fs = require('fs'); 
-var path = require('path');
+var mediaFolder = require('./mediaFolder');
+var promisse = require("./promisse");
 
-var mediaFolders = [
-	{path:'C:/Users/rafael/Documents/media_test_folders/My Movie Archive', type:'movies'},
-	{path:'C:/Users/rafael/Documents/media_test_folders/New Movies', type:'movies'}
+var searchFolders = [
+	{path:'/Volumes/BOOTCAMP/Users/rafael/Documents/media_test_folders/My Movie Archive', type:'movies'},
+	{path:'/Volumes/BOOTCAMP/Users/rafael/Documents/media_test_folders/New Movies', type:'movies'}
 ];
 
-function readDir(list, item, callback){
-	fs.readdir(item.path, function(err, files){
-		//console.log('fs.readdir() callback for path: ' + item.path);
+//Media List object
+var MediaList = function(){
+	var mediaItems = new Array();
 
-		if (err){
-			console.log('error: ' + err);
-			throw err;	
-		} 
+	//add a mediaInfo to the list
+	this.add = function(mediaInfo){
+		mediaItems.push(mediaInfo);
+	};
 
-		var pending = 0;
-		for (var j = 0; j < files.length; j++){
-			var file = files[j];
-			console.log('file: ' + file);
+	//return the size of the media list
+	this.size = function(){
+		return mediaItems.length;
+	};
 
-			var fullPath = path.resolve(item.path, file);
+	this.mediaItems = mediaItems;
+};
 
-			console.log('fs.readdir() fullPath: ' + fullPath);
+function listDir(mediaList, folders){
 
-			//check if its a file or folder
-			var stats = fs.statSync(fullPath);
+	var myPromisse = promisse.newPromisse();
 
-			if(stats.isFile()){
-				list.push({filePath:fullPath, type:item.type});
-			}
-			else if(stats.isDirectory()){
-				pending++;
-				readDir(list, {path:fullPath, type:item.type}, function(){
-					pending--;
-					if(pending === 0){
-						console.log('all sub-folders processed!');
-						callback();
-					}
-				});
-			}
-			else{
-				//file type not supported
-				console.log('file stat not supported: ' + fullPath);
-			}
-		}
-		if(pending === 0){
-			console.log('no folders found');
-			callback();
-		}
-	});
-}
-
-function listDir(list, folders, callback){
-	var pending = 0;
+	//var pending = folders.length;
 	for (var i = 0; i < folders.length; i++){
-		var item = folders[i];
+		var folderInfo = folders[i];
 
-		pending++;
+		myPromisse.chain(
+			mediaFolder.readDir(mediaList, folderInfo)
+		);
 
-		readDir(list, item, function(){
+		/*
+		mediaFolder.readDir(mediaList, folderInfo, function(err, mediaList){
+			console.log('\n## callback readDir pending : ' + pending + 'mediaList: ' + JSON.stringify(mediaList));
 			pending--;
 			//check if there is no more pending actions
 			if(pending === 0){
-				callback();
+				callback(err, mediaList);
+				pending = -1;
 			}
 		});
+		*/
 	}
 
-
+	return myPromisse;
 }
 
 //list all media available in the server
-function listAll(callback){
-	console.log('method list all !');
+function listAll(){
 
-	var list = [];
+	var myPromisse = promisse.newPromisse();
 
-	listDir(list, mediaFolders, function(){
-		
-		callback(list);
+	var mediaList = new MediaList();
 
-	});
+	//invoke the listDir method which returns a promisse object
+	listDir(mediaList, searchFolders)
+		//when done
+		.done(function(){
+			console.log('\n*** Search Finished -> mediaList : ' + JSON.stringify( mediaList ));
+			console.log('\n** Search Finished ** mediaList.size() : ' + mediaList.size());
+			
+			myPromisse.resolve(mediaList);//complete the promisse
+			//callback(mediaList);
+		})
+		//if fail
+		.fail(function(err){
+			console.log('Error trying to listAll() media : ' + err.description);
+			
+			myPromisse.reject(err);//reject the promisse
+			//throw err;
+		});
 
+
+	return myPromisse;
 /*
-	callback([{
-		title:"Lord of The Rings",
-		posterImage:'http://cdn1.hark.com/images/000/006/668/6668/original.0'
-	}, 
-	{
-		title:"Fast and Furious 5",
-		posterImage:'http://4.bp.blogspot.com/-yAaeY3Svm3g/T8DsgmgrJHI/AAAAAAAAJHg/jE8ya70bc8c/s1600/The+Fast+and+The+Furious.jpg'
-	}]);
+	listDir(mediaList, searchFolders, function(err, mediaList){
+		//check fo errors
+		if(err){
+			console.log('Error trying to listAll() media : ' + err.description);
+			throw err;
+		}
+
+		console.log('\n** Search Finished ** mediaList.size() : ' + mediaList.size());
+
+		callback(mediaList);
+	});
 */
 }
 
