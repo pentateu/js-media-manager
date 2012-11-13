@@ -1,5 +1,5 @@
 //Unit test for promisse.js file
-var promisse = require("../promisse");
+var Promisse = require("../promisse");
 
 var testUtils = require("./testUtils");
 
@@ -7,7 +7,7 @@ var testUtils = require("./testUtils");
 function scenario1(test){
 	var counter = 0;
 	//1 - create the 2 handlers
-	var p = promisse.newPromisse();
+	var p = new Promisse();
 	p.done(function(value){
 		counter += value;
 	});
@@ -21,28 +21,26 @@ function scenario1(test){
 	p.resolve(5);
 
 	//timer to make sure the done handlers are invoked
-	setTimeout(function(){
-		//check the total
-		if(counter != 10){
-			test.fail('counter != 10');
-		}
+	//check the total
+	if(counter != 10){
+		test.fail('counter != 10');
+	}
 
-		p.done(function(value){
-			counter += (value * 2);
-		});
+	p.done(function(value){
+		counter += (value * 2);
+	});
 
-		if(counter != 20){
-			test.fail('counter != 20');
-		}
+	if(counter != 20){
+		test.fail('counter != 20');
+	}
 
-		//end of the test
-		test.end();
-	}, 100);
+	//end of the test
+	test.end();
 }
 
 //Test Scenario 2 - rejected
 function scenario2(test){
-	var p = promisse.newPromisse();
+	var p = new Promisse();
 
 	var failCount = 0;
 
@@ -78,7 +76,7 @@ function scenario2(test){
 
 //Test Scenario 3 - chaining multiple promisse objects
 function scenario3(test){
-	var p = promisse.newPromisse();
+	var p = new Promisse();
 
 	p.done(function(result){
 		//check if the resuls is a array with 2 items
@@ -94,8 +92,8 @@ function scenario3(test){
 		test.fail('there is no errors in the chain');
 	});
 
-	var child1 = promisse.newPromisse();
-	var child2 = promisse.newPromisse();
+	var child1 = new Promisse();
+	var child2 = new Promisse();
 
 	p.chain(child1);
 	p.chain(child2);
@@ -107,7 +105,7 @@ function scenario3(test){
 
 //Test Scenario 4 - chaining multiple promisse objects and failing one child with default behaviour
 function scenario4(test){
-	var p = promisse.newPromisse();
+	var p = new Promisse();
 
 	p.done(function(result){
 		test.fail('the whole chain should fail');
@@ -120,9 +118,9 @@ function scenario4(test){
 		test.end();
 	});
 
-	var child1 = promisse.newPromisse();
-	var child2 = promisse.newPromisse();
-	var child3 = promisse.newPromisse();
+	var child1 = new Promisse();
+	var child2 = new Promisse();
+	var child3 = new Promisse();
 
 	p.chain(child1);
 	p.chain(child2);
@@ -136,7 +134,7 @@ function scenario4(test){
 
 //Test Scenario 5 - chaining multiple promisse objects and failing one child with behaviour set to 
 function scenario5(test){
-	var p = promisse.newPromisse();
+	var p = new Promisse();
 
 	p.setChainBehaviour("passAny");
 
@@ -155,10 +153,10 @@ function scenario5(test){
 
 	});
 
-	var child1 = promisse.newPromisse();
-	var child2 = promisse.newPromisse();
-	var child3 = promisse.newPromisse();
-	var child4 = promisse.newPromisse();
+	var child1 = new Promisse();
+	var child2 = new Promisse();
+	var child3 = new Promisse();
+	var child4 = new Promisse();
 
 	p.chain(child1).chain(child2).chain(child3).chain(child4);
 
@@ -171,7 +169,7 @@ function scenario5(test){
 
 //Test Scenario 6 - same as 5, but using options to set the behaviour
 function scenario6(test){
-	var p = promisse.newPromisse({chainBehaviour:"passAny"});
+	var p = new Promisse({chainBehaviour:"passAny"});
 
 	p.done(function(result){
 		//check if the resuls is a array with 2 items
@@ -187,10 +185,10 @@ function scenario6(test){
 		test.fail('chain should not fail');
 	});
 
-	var child1 = promisse.newPromisse();
-	var child2 = promisse.newPromisse();
-	var child3 = promisse.newPromisse();
-	var child4 = promisse.newPromisse();
+	var child1 = new Promisse();
+	var child2 = new Promisse();
+	var child3 = new Promisse();
+	var child4 = new Promisse();
 
 	p.chain(child1).chain(child2).chain(child3).chain(child4);
 
@@ -203,7 +201,7 @@ function scenario6(test){
 
 //Test Scenario 7 - chaining with filter
 function scenario7(test){
-	var p = promisse.newPromisse().filterChain(function(listOfResults){
+	var p = new Promisse().filterChain(function(listOfResults){
 			return listOfResults[0][0];//always return the first item of the list of results
 		});
 
@@ -217,8 +215,8 @@ function scenario7(test){
 		test.fail('there is no errors in the chain');
 	});
 
-	var child1 = promisse.newPromisse();
-	var child2 = promisse.newPromisse();
+	var child1 = new Promisse();
+	var child2 = new Promisse();
 
 	p.chain(child1);
 	p.chain(child2);
@@ -228,12 +226,15 @@ function scenario7(test){
 
 }
 
-//running the tests
+exports.name = module.filename;
 
-testUtils.run(scenario1, "Scenario 1");
-testUtils.run(scenario2, "Scenario 2");
-testUtils.run(scenario3, "Scenario 3");
-testUtils.run(scenario4, "Scenario 4");
-testUtils.run(scenario5, "Scenario 5");
-testUtils.run(scenario6, "Scenario 6");
-testUtils.run(scenario7, "Scenario 7");
+exports.run = function(){
+	//running the tests
+	testUtils.run(scenario1, "Scenario 1");
+	testUtils.run(scenario2, "Scenario 2");
+	testUtils.run(scenario3, "Scenario 3");
+	testUtils.run(scenario4, "Scenario 4");
+	testUtils.run(scenario5, "Scenario 5");
+	testUtils.run(scenario6, "Scenario 6");
+	testUtils.run(scenario7, "Scenario 7");
+};

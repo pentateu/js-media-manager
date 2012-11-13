@@ -1,62 +1,75 @@
-var fs = require('fs'); 
-var path = require('path');
+var fs 		= require('fs'); 
+var pathLib 	= require('path');
 
-var mediaFile = require('./mediaFile');
-var promisse = require("./promisse");
+var MediaFile 	= require('./mediaFile');
+var Promisse 	= require("./promisse");
 
-function readDir(mediaList, folderInfo){
+var MediaFolder = module.exports = function(folderInfo) {
+	//make sure it behaves as a constructor
+	if ( ! (this instanceof MediaFolder) ) {
+		return new MediaFolder(folderInfo);
+	}
 
-	var myPromisse = promisse.newPromisse();
+	var mediaFolder = this;
 
-	fs.readdir(folderInfo.path, function(err, files){
-		//check for errors
-		if (err){
-			console.log('error on fs.readdir() for path : ' + folderInfo.path + ' err: ' + err);
-			myPromisse.reject(err);
-		}
+	var parent = folderInfo.parent;
 
-		var nothingFound = true;
-		for (var j = 0; j < files.length; j++){
-			var file = files[j];
-			var fullPath = path.resolve(folderInfo.path, file);
+	var path = this.path = folderInfo.path;
 
-			//check if its a file or folder
-			var stats = fs.statSync(fullPath);
+	var scanForMediaFiles = this.scanForMediaFiles = function(mediaList){
 
-			if(stats.isFile()){
-				nothingFound = false;
-				//pending++;
-				myPromisse.chain(
-					mediaFile.getMediaInfo(file, folderInfo, stats).
-						done(function(mediaInfo){
-							//process the media info
-							mediaList.add(mediaInfo);
-							console.log('media info processed for the file : ' + fullPath);
-						})
-						.fail(function(err){
-							//could not find media info for the file
-							console.log('could not find media info for the file : ' + fullPath);
-						})
-				);
+		var myPromisse = new Promisse();
+
+		fs.readdir(path, function(err, files){
+			//check for errors
+			if (err){
+				console.log('error on fs.readdir() for path : ' + path + ' err: ' + err);
+				myPromisse.reject(err);
 			}
-			else if(stats.isDirectory()){
-				nothingFound = false;
-				//keep reading sub-folders
-				myPromisse.chain(readDir(mediaList, {path:fullPath, type:folderInfo.type}));
-			}
-			else{
-				//file type not supported
-				console.log('file stat not supported: ' + fullPath);
-			}
-		}
-		//when no files or subfolers are found
-		if(nothingFound){
-			console.log('no files or sub-folders found for folder: ' + folderInfo.path);
-			myPromisse.resolve();
-		}
-	});
-	
-	return myPromisse;
-}
 
-exports.readDir = readDir;
+			var nothingFound = true;
+			files.forEach(function(file){
+				//ful path
+				var fullPath = pathLib.resolve(path, file);
+				//check if its a file or folder
+				var stats = fs.statSync(fullPath);
+				//check if it is a file
+				if(stats.isFile()){
+					nothingFound = false;
+					//pending++;
+					myPromisse.chain(
+						MediaFile.get(file, mediaFolder, stats).
+							done(function(mediaFile){
+								//add the media file to the media list
+								mediaList.add(mediaFile);
+								console.log('media info processed for the file : ' + fullPath);
+							})
+							.fail(function(err){
+								//could not find media info for the file
+								console.log('could not find media info for the file : ' + fullPath);
+							})
+					);
+				}
+				else if(stats.isDirectory()){
+					nothingFound = false;
+
+					var subMediaFolder = new MediaFolder({path:fullPath, type:folderInfo.type, parent:mediaFolder});
+
+					//keep reading sub-folders
+					myPromisse.chain(subMediaFolder.scanForMediaFiles(mediaList));
+				}
+				else{
+					//file type not supported
+					console.log('file stat not supported: ' + fullPath);
+				}
+			});
+
+			//when no files or subfolers are found
+			if(nothingFound){
+				console.log('no files or sub-folders found for folder: ' + path);
+				myPromisse.resolve();
+			}
+		});
+		return myPromisse;
+	};
+};

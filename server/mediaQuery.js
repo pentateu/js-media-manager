@@ -1,34 +1,27 @@
-var mediaFolder = require('./mediaFolder');
-var promisse = require("./promisse");
+var MediaFolder = require('./mediaFolder');
+var Promisse = require("./promisse");
+var Util = require("./util");
 
 var searchFolders = [
-	{path:'/Volumes/BOOTCAMP/Users/rafael/Documents/media_test_folders/My Movie Archive', type:'movies'},
-	{path:'/Volumes/BOOTCAMP/Users/rafael/Documents/media_test_folders/New Movies', type:'movies'}
+	{path:'/Users/rafaelalmeida/Developer/NodeJS/js-media-manager/media_test_folders/My Movie Archive', type:'movies'},
+	{path:'/Users/rafaelalmeida/Developer/NodeJS/js-media-manager/media_test_folders/New Movies', type:'movies'}
 ];
 
 //Media List object
 var MediaList = function(){
-	var mediaItems = new Array();
+	var mediaItems = this.mediaItems = new Array();
 
-	//add a mediaInfo to the list
-	this.add = function(mediaInfo){
-		mediaItems.push(mediaInfo);
-	};
-
-	//return the size of the media list
-	this.size = function(){
-		return mediaItems.length;
-	};
-
-	this.mediaItems = mediaItems;
+	Util.asCollection(this, mediaItems);
 };
 
 //list all media available in the server
 function listAll(){
 
-	var mediaList = new MediaList();
+	//var mediaList = new MediaList();
+	var mediaList = new Array();
+	Util.asCollection(mediaList);
 
-	var myPromisse = promisse.newPromisse().filterChain(function(results){
+	var myPromisse = new Promisse().filterChain(function(results){
 		return mediaList;//return the mediaList
 	});
 
@@ -36,9 +29,9 @@ function listAll(){
 	for (var i = 0; i < searchFolders.length; i++){
 		var folderInfo = searchFolders[i];
 
-		myPromisse.chain(
-			mediaFolder.readDir(mediaList, folderInfo)
-		);
+		var mediaFolder = new MediaFolder(folderInfo);
+
+		myPromisse.chain(mediaFolder.scanForMediaFiles(mediaList));
 	}
 	return myPromisse;
 }

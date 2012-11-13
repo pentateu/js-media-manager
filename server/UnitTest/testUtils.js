@@ -28,6 +28,18 @@ function run(func, scenarioName){
 				cleanRun = false;
 				fail(scenarioName, description +  " - Expected : '" + expected + "' , but value is: '" + value + "' ");
 			}
+		},
+		assertNotNull:function(value, description){
+			if(!value){
+				cleanRun = false;
+				fail(scenarioName, description +  " - Value should not be null.");
+			}
+		},
+		assertFalse:function(value, description){
+			if(value === true){
+				cleanRun = false;
+				fail(scenarioName, description +  " - Value should not be false.");
+			}
 		}
 	};
 	try{

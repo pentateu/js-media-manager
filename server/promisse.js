@@ -1,7 +1,12 @@
-var Assert = require('./assert');
+var Util = require('./util');
 
 //promisse object definition
-var Promisse = function(options){
+var Promisse = module.exports = function(options) {
+	//make sure it behaves as a constructor
+	if ( ! (this instanceof Promisse) ) {
+		return new Promisse(options);
+	}
+
 	//instance of the object that has just being built
 	var instance = this;
 
@@ -10,7 +15,7 @@ var Promisse = function(options){
 	 * 1 : done / resolved
 	 * 2 : fail / rejected
 	 */
-	var state = 0;
+	var state = this.state = PENDING;
 
 	var args = null;//arguments sent when resolve was called
 
@@ -34,7 +39,7 @@ var Promisse = function(options){
 	}
 
 	function setChainBehaviour(value){
-		Assert.assertParameter(value, ["failAll", "passAny"]);
+		Util.validateParameter(value, ["failAll", "passAny"]);
 
 		//console.log('chainBehaviour set to: ' + value);
 		chainBehaviour = value;
@@ -44,10 +49,10 @@ var Promisse = function(options){
 
 	//add a callback to be called when the promisse is 'done'
 	this.done = function(handler){
-		if(state === 1){
+		if(state === RESOLVED){//invoke now !
 			handler.apply(instance, args);
 		}
-		else if(state === 0){
+		else if(state === PENDING){
 			//pending state.. add to the queue
 			doneHandlers.push(handler);
 		}
@@ -56,10 +61,10 @@ var Promisse = function(options){
 
 	//add a callback to be called when the promisse has 'failed'
 	this.fail = function(handler){
-		if(state === 2){
+		if(state === REJECTED){//invoke now
 			handler.apply(instance, args);
 		}
-		else if(state === 0){
+		else if(state === PENDING){
 			//pending state.. add to the queue
 			failHandlers.push(handler);
 		}
@@ -69,8 +74,8 @@ var Promisse = function(options){
 	//resolve the promisse
 	this.resolve = function(){
 		args = arguments;
-		if(state === 0){
-			state = 1;
+		if(state === PENDING){
+			state = RESOLVED;
 			//call the doneHandlers
 			for (var i = 0; i < doneHandlers.length; i++) {
 				doneHandlers[i].apply(instance, args);
@@ -83,8 +88,8 @@ var Promisse = function(options){
 	//reject the promisse
 	this.reject = function(){
 		args = arguments;
-		if(state === 0){
-			state = 2;
+		if(state === PENDING){
+			state = REJECTED;
 			//call the doneHandlers
 			for (var i = 0; i < failHandlers.length; i++) {
 				failHandlers[i].apply(instance, args);
@@ -120,7 +125,7 @@ var Promisse = function(options){
 
 	//chain another promisse
 	this.chain = function(anotherPromisse){
-		if(state === 0){ //can only chain promisses when is still at a pending state
+		if(state === PENDING){ //can only chain promisses when is still at a pending state
 			chainCounter++;
 			anotherPromisse.done(function(){
 				chainArgsArray.push(arguments);
@@ -141,7 +146,11 @@ var Promisse = function(options){
 		}
 		return instance;
 	};
-}
+};
 
+//states
+var PENDING 	= Promisse.PENDING 	= "pending";
+var RESOLVED 	= Promisse.RESOLVED = "resolved";
+var REJECTED 	= Promisse.REJECTED = "rejected";
 
-exports.newPromisse = function(options){return new Promisse(options)};
+//exports.newPromisse = function(options){return new Promisse(options)};
