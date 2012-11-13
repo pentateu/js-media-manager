@@ -24,11 +24,7 @@ function getMediaInfoImpl(fileName, folderInfo, stats){
 
 //get the media info for a given file
 function getMediaInfo(fileName, folderInfo, stats){
-	var myPromisse = promisse.newPromisse().filterChain(
-		function(listOfResults){
-			return listOfResults[0][0];//always return the first item of the list of results
-		}
-	);
+	var myPromisse = promisse.newPromisse();
 
 	//validate input
 	if( ! stats.isFile()){
