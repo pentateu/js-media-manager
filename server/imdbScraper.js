@@ -14,10 +14,10 @@ var IMDBScraper = module.exports = function(title) {
 		//mock
 		p.resolve(
 			{
-				"title" : "Test Title",
+				"title" : "Fake title - from mock imdb scraper",
 				"watched" : "false",
 				"imdb" : {
-					"title" : "Test Title",
+					"title" : "Fake title - from mock imdb scraper",
 					"year" : "2012",
 					"id" : "tt1764651",
 					"rating" : "7.1"

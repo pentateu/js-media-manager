@@ -159,7 +159,7 @@ var get = MediaFile.get = function(fileName, mediaFolder, stats){
 			break;
 		default:
 			console.log('file ext not supported : ' + ext);
-			return new Promisse().reject('File is not a media file. ext: ' + ext);
+			return new Promisse().reject('File is not a valid media file. ext: ' + ext);
 			break;
 	}
 };
@@ -185,6 +185,7 @@ var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFold
 		mediaFile.loadInfoFile()
 			.done(function(info){
 				//Condition 1: info loaded (unit tested !)
+				mediaFile.info = info;
 				myPromisse.resolve(mediaFile);
 			})
 			.fail(function(err){
