@@ -30,7 +30,7 @@ var Promisse = module.exports = function(options) {
 	//the done handlers
 	//failAll : if at least one chained promiss object has failed the entire chain fail
 	//and the fail handlers are called.
-	var chainBehaviour = "failAll";
+	var chainBehaviour = FAIL_ALL;
 
 	//console.log('options : ' + JSON.stringify(options));
 
@@ -39,7 +39,7 @@ var Promisse = module.exports = function(options) {
 	}
 
 	function setChainBehaviour(value){
-		Util.validateParameter(value, ["failAll", "passAny"]);
+		Util.validateParameter(value, [FAIL_ALL, PASS_ANY]);
 
 		//console.log('chainBehaviour set to: ' + value);
 		chainBehaviour = value;
@@ -152,5 +152,9 @@ var Promisse = module.exports = function(options) {
 var PENDING 	= Promisse.PENDING 	= "pending";
 var RESOLVED 	= Promisse.RESOLVED = "resolved";
 var REJECTED 	= Promisse.REJECTED = "rejected";
+
+var PASS_ANY 	= Promisse.PASS_ANY = "passAny";
+var FAIL_ALL 	= Promisse.FAIL_ALL = "failAll";
+
 
 //exports.newPromisse = function(options){return new Promisse(options)};

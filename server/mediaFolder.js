@@ -16,9 +16,10 @@ var MediaFolder = module.exports = function(folderInfo) {
 
 	var path = this.path = folderInfo.path;
 
-	var scanForMediaFiles = this.scanForMediaFiles = function(mediaList){
+	var scan = this.scan = function(mediaList){
 
 		var myPromisse = new Promisse();
+		myPromisse.setChainBehaviour(Promisse.PASS_ANY);
 
 		fs.readdir(path, function(err, files){
 			//check for errors
@@ -46,7 +47,7 @@ var MediaFolder = module.exports = function(folderInfo) {
 							})
 							.fail(function(err){
 								//could not find media info for the file
-								console.log('could not find media info for the file : ' + fullPath);
+								console.log('Not a valid media file : ' + fullPath);
 							})
 					);
 				}
@@ -56,7 +57,7 @@ var MediaFolder = module.exports = function(folderInfo) {
 					var subMediaFolder = new MediaFolder({path:fullPath, type:folderInfo.type, parent:mediaFolder});
 
 					//keep reading sub-folders
-					myPromisse.chain(subMediaFolder.scanForMediaFiles(mediaList));
+					myPromisse.chain(subMediaFolder.scan(mediaList));
 				}
 				else{
 					//file type not supported

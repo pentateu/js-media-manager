@@ -135,8 +135,6 @@ var getExt = MediaFile.getExt = function(fileName){
 
 //get the media file for a given file location
 var get = MediaFile.get = function(fileName, mediaFolder, stats){
-	var myPromisse = new Promisse();
-
 	//ful path
 	var path = pathLib.resolve(mediaFolder.path, fileName);
 
@@ -157,19 +155,20 @@ var get = MediaFile.get = function(fileName, mediaFolder, stats){
 		case 'mkv':
 		case 'mp4':
 			//get media info
-			loadMediaFile(myPromisse, path, fileName, mediaFolder, ext, stats);
+			return loadMediaFile(path, fileName, mediaFolder, ext, stats);
 			break;
 		default:
 			console.log('file ext not supported : ' + ext);
-			myPromisse.reject('File is not a media file. ext: ' + ext);
+			return new Promisse().reject('File is not a media file. ext: ' + ext);
 			break;
 	}
-	return myPromisse;
 };
 
 //load the Media File details from the file system
-var loadMediaFile = MediaFile.loadMediaFile = function(myPromisse, path, fileName, mediaFolder, ext, stats){
+var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFolder, ext, stats){
 	var mediaFile = mediaInfoCache[path];
+
+	var myPromisse = new Promisse();
 
 	if(mediaFile != null){ //media in cache
 		myPromisse.resolve(mediaFile);
@@ -215,7 +214,7 @@ var loadMediaFile = MediaFile.loadMediaFile = function(myPromisse, path, fileNam
 				}
 			});
 	}
-	
+	return myPromisse;
 };
 
 

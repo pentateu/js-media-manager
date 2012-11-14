@@ -31,7 +31,7 @@ function listAll(){
 
 		var mediaFolder = new MediaFolder(folderInfo);
 
-		myPromisse.chain(mediaFolder.scanForMediaFiles(mediaList));
+		myPromisse.chain(mediaFolder.scan(mediaList));
 	}
 	return myPromisse;
 }

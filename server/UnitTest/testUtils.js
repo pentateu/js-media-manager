@@ -132,7 +132,7 @@ function run(func, scenarioName, nextCallBack){
 	}
 	catch(err){
 		cleanRun = false;
-		fail(scenarioName, ' Error: ' + err);
+		testContext.fail(' Error: ' + err);
 		throw err;
 	}
 }
