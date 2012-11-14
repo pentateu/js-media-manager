@@ -69,7 +69,7 @@ function scenario4(test){
 	var x = 1;
 	list.iterate(function(it, item){
 
-		console.log('iterate callback list1. item: ' + item);
+		//console.log('iterate callback list1. item: ' + item);
 
 		var txt = "teste " + x;
 		x++;
@@ -77,7 +77,7 @@ function scenario4(test){
 
 		var y = 1;
 		list2.iterate(function(it, item){
-			console.log('iterate callback list2. item: ' + item);
+			//console.log('iterate callback list2. item: ' + item);
 
 			x++;
 			var txt = "list2 " + y;
@@ -87,18 +87,16 @@ function scenario4(test){
 			it.next();//move to next item
 		},
 		function(){
-			console.log('end callback list2.');
+			//console.log('end callback list2.');
 			//end of list2
 			it.next();
 		});
 	},
 	function(){
-		console.log('end callback list1.');
+		//console.log('end callback list1.');
 		//end of list
 		test.end();
 	});
-
-	
 }
 
 exports.name = module.filename;
