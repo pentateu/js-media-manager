@@ -24,6 +24,29 @@ var validateParameter = exports.validateParameter = function(parameterValue, val
 	}
 };
 
+//Definition of the Exception object
+var Exception = function(options){
+	var code = this.code = null;
+	var message = this.message = null;
+	var cause = this.cause = null;
+
+	if(options){
+		code = options.code;
+		message = options.message;
+		cause = options.cause;
+	}
+
+	this.setCause = function(val){
+		cause = val;
+		return this;
+	};
+	
+	return this;
+}
+
+var exception = exports.exception = function(options){
+	return new Exception(options);
+};
 
 //extend the object with collection methods
 //forEach, iterate and etc

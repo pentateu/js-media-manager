@@ -101,7 +101,8 @@ function scenario4(test){
 
 exports.name = module.filename;
 
-exports.run = function(){
+exports.run = function(summary){
+	testUtils.summary = summary;
 	testUtils.run(scenario1, "Scenario 1");
 	testUtils.run(scenario2, "Scenario 2");
 

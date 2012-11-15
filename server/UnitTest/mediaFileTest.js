@@ -9,6 +9,8 @@ var MediaFolder = require('../mediaFolder');
 var MediaScraper = require('../mediaScraper');
 var Promisse = require('../promisse');
 
+var UnitTest = require('./unitTest');
+
 //load test config
 var testConfig = JSON.parse(fs.readFileSync('./testConfig.json'));
 
@@ -17,170 +19,73 @@ exports.name = module.filename;
 
 var comedyFolder = new MediaFolder({path:testConfig.baseTestMediaFolder + '/My Movie Archive/Comedy', type:'movies'});
 
-//test loading the info file
-function scenario1(test){
-	test.name = "Scenario 1 - Test MediaFile.loadInfoFile() for an existing info file.";
 
-	var fileName, mediaFolder, ext;
+var MediaFileTest = module.exports = new UnitTest(function(){
 
-	ext = 'mkv';
-	fileName = 'Expendables 2 (2012).mkv';
-	mediaFolder = new MediaFolder({path:testConfig.baseTestMediaFolder + '/New Movies', type:'movies'});
+	this.testStringProperty = "";
+	this.testJSON = {};
 
-	var mediaFile = new MediaFile(fileName, mediaFolder);
+	this.outraFunc = function(){};
+	this.stringProperty = "";
+	
+	//test loading the info file
+	this.testLoadInfoFile = function(test){
+		test.name = "Test MediaFile.loadInfoFile() for an existing info file.";
 
-	mediaFile.loadInfoFile()
-		.done(function(info){
-			//test the media file
-			test.assertNotNull(info, 'valid info file');
+		var fileName, mediaFolder, ext;
 
-			test.assertNotNull(info.imdb, 'media file with imdb metadata');
+		ext = 'mkv';
+		fileName = 'Expendables 2 (2012).mkv';
+		mediaFolder = new MediaFolder({path:testConfig.baseTestMediaFolder + '/New Movies', type:'movies'});
 
-			test.assertEqual(info.title, 'The Expendables 2', 'proper imdb title');
+		var mediaFile = new MediaFile(fileName, mediaFolder);
 
-			test.assertFalse(info.watched, 'watched false');
+		mediaFile.loadInfoFile()
+			.done(function(info){
+				//test the media file
+				test.assertNotNull(info, 'valid info file');
 
-			test.assertEqual(info.imdb.id, 'tt1764651', 'proper imdb id');
+				test.assertNotNull(info.imdb, 'media file with imdb metadata');
 
-			test.end();
-		})
-		.fail(function(err){
-			test.fail('should work! err.code: ' + err.code + ' err.cause: ' + err.cause);
-		});
-}
+				test.assertEqual(info.title, 'The Expendables 2', 'proper imdb title');
 
-//test MediaFile save
-function scenario2(test){
-	test.name = "Scenario 2 - Test MediaFile save()";
+				test.assertFalse(info.watched, 'watched false');
 
-	var fileName = 'The Campaign (2012).avi';
-	var infoFileName = 'The Campaign (2012).info';
-	var infoPath = pathLib.resolve(comedyFolder.path, infoFileName);
-
-	test.tearDown(function(log){
-		//delete the info file
-		fs.unlink(infoPath, function(err){
-			if(err){
-				log('could not delete info file. err: ' + err);
-			}
-			else{
-				log('Info file deleted!');
-			}
-		});
-	});
-
-	var mediaFile = new MediaFile(fileName, comedyFolder);
-
-	//set the info 
-	mediaFile.info = {
-		"title" : "The Campaign",
-		"watched" : "false",
-		"imdb" : {
-			"title" : "The Campaign",
-			"year" : "2012",
-			"id" : "tt1790886",
-			"rating" : "6.2"
-		}
-	};
-
-	mediaFile.save()
-		.done(function(){
-			//check that the file has been saved
-			try{
-				var savedInfo = JSON.parse(fs.readFileSync(infoPath));
-				
-				test.assertEqual(savedInfo.title, "The Campaign", 'same title');
-				test.assertFalse(savedInfo.watched, 'watched is false');
-				test.assertNotNull(savedInfo.imdb, 'imdb not null');
-				test.assertEqual(savedInfo.imdb.year, "2012", 'same year');
+				test.assertEqual(info.imdb.id, 'tt1764651', 'proper imdb id');
 
 				test.end();
-			}
-			catch(err){
-				test.fail('invalid info json. err: ' + JSON.stringify(err));
-			}
-		})
-		.fail(function(err){
-			test.fail('no exception expected. err: ' + JSON.stringify(err));
+			})
+			.fail(function(err){
+				test.fail('should work! err.code: ' + err.code + ' err.cause: ' + err.cause);
+			});
+	};
+
+	//test MediaFile save
+	this.testSave = function(test){
+		test.name = "Test MediaFile save()";
+
+		console.log('testSave invoked');
+
+		var fileName = 'The Campaign (2012).avi';
+		var infoFileName = 'The Campaign (2012).info';
+		var infoPath = pathLib.resolve(comedyFolder.path, infoFileName);
+
+		test.tearDown(function(log){
+			//delete the info file
+			fs.unlink(infoPath, function(err){
+				if(err){
+					log('could not delete info file. err: ' + err);
+				}
+				else{
+					log('Info file deleted!');
+				}
+			});
 		});
-}
 
-//error conditions for invalid parameters
-function scenario3(test){
-	test.name = "Scenario 3 - error conditions for invalid parameters";
-
-	var fileName = 'The Campaign (2012).avi';
-
-	test.assertThrows(function(){
-		var mediaFile = new MediaFile('xxx');
-	}, 
-	'show throw error for invalid mediaFolder parameter');
-
-	test.assertThrows(function(){
-		var mediaFile = new MediaFile(null, comedyFolder);
-	}, 
-	'show throw error for invalid fileName parameter');
-
-	test.assertNotThrows(function(){
 		var mediaFile = new MediaFile(fileName, comedyFolder);
-	}, 
-	'valid parameters.');
 
-	test.assertNotThrows(function(){
-		var mediaFile = new MediaFile(fileName, comedyFolder, 'avi');
-	}, 
-	'valid parameters.');
-
-	test.end();
-}
-
-function scenario4(test){
-	test.name = "Scenario 4 - Try to load an invalid info file.";
-
-	var fileName = 'Mr Bean.avi';
-	var infoFileName = 'Mr Bean.info';
-	var infoPath = pathLib.resolve(comedyFolder.path, infoFileName);
-
-	test.tearDown(function(log){
-		//delete the info file
-		fs.unlink(infoPath, function(err){
-			if(err){
-				log('could not delete info file. err: ' + err);
-			}
-			else{
-				log('Info file deleted!');
-			}
-		});
-	});
-
-	//create an invalid info file
-	fs.writeFileSync(infoPath, '{invalid json file}...');
-
-	var mediaFile = new MediaFile(fileName, comedyFolder);
-
-	mediaFile.loadInfoFile()
-		.done(function(info){
-			test.fail('should not be able to load info file! : info: ' + JSON.stringify(info));
-		})
-		.fail(function(err){
-			console.log('\n' + JSON.stringify(err) + '\n');
-			test.end();
-		});
-}
-
-
-
-//test full scraping cycle
-function scenario5(test){
-	test.name = "Scenario 5 - scraping info details.";
-
-	var fileName = 'The Campaign (2012).avi';
-	
-	//stub the scrape functions
-	MediaScraper.scrape = function(mediaFile){
-		//console.log(' *** (Stub) Running MediaScraper.scrape() stub. ***');
-		var p = new Promisse();
-		p.resolve({
+		//set the info 
+		mediaFile.info = {
 			"title" : "The Campaign",
 			"watched" : "false",
 			"imdb" : {
@@ -189,42 +94,138 @@ function scenario5(test){
 				"id" : "tt1790886",
 				"rating" : "6.2"
 			}
-		});
-		return p;
+		};
+
+		mediaFile.save()
+			.done(function(){
+				//check that the file has been saved
+				try{
+					var savedInfo = JSON.parse(fs.readFileSync(infoPath));
+					
+					test.assertEqual(savedInfo.title, "The Campaign", 'same title');
+					test.assertFalse(savedInfo.watched, 'watched is false');
+					test.assertNotNull(savedInfo.imdb, 'imdb not null');
+					test.assertEqual(savedInfo.imdb.year, "2012", 'same year');
+
+					test.end();
+				}
+				catch(err){
+					test.fail('invalid info json. err: ' + JSON.stringify(err));
+				}
+			})
+			.fail(function(err){
+				test.fail('no exception expected. err: ' + JSON.stringify(err));
+			});
 	};
 
-	MediaFile.get(fileName, comedyFolder)
-		.done(function(mediaFile){
+	//error conditions for invalid parameters
+	this.testInvalidParameters = function(test){
+		test.name = "Error conditions for invalid parameters";
 
-			//console.log('mediaFile: ' + JSON.stringify(mediaFile));
+		var fileName = 'The Campaign (2012).avi';
 
-			//test the media file
-			test.assertNotNull(mediaFile, 'valid media file');
+		test.assertThrows(function(){
+			var mediaFile = new MediaFile('xxx');
+		}, 
+		'show throw error for invalid mediaFolder parameter');
 
-			test.assertNotNull(mediaFile.info, 'media file with imdb metadata');
+		test.assertThrows(function(){
+			var mediaFile = new MediaFile(null, comedyFolder);
+		}, 
+		'show throw error for invalid fileName parameter');
 
-			test.assertNotNull(mediaFile.info.imdb, 'media file with imdb metadata');
+		test.assertNotThrows(function(){
+			var mediaFile = new MediaFile(fileName, comedyFolder);
+		}, 
+		'valid parameters.');
 
-			test.assertEqual(mediaFile.info.imdb.id, 'tt1790886', 'proper imdb id');
+		test.assertNotThrows(function(){
+			var mediaFile = new MediaFile(fileName, comedyFolder, 'avi');
+		}, 
+		'valid parameters.');
 
-			test.assertEqual(mediaFile.info.imdb.title, 'The Campaign', 'proper imdb title');
+		test.end();
+	};
 
-			test.assertEqual(mediaFile.info.imdb.year, '2012', 'proper imdb year');
+	this.testInvalidInfoFile = function(test){
+		test.name = "Try to load an invalid info file.";
 
-			test.end();
-		})
-		.fail(function(err){
-			test.fail('should work! err: ' + JSON.stringify(err));
+		var fileName = 'Mr Bean.avi';
+		var infoFileName = 'Mr Bean.info';
+		var infoPath = pathLib.resolve(comedyFolder.path, infoFileName);
+
+		test.tearDown(function(log){
+			//delete the info file
+			fs.unlink(infoPath, function(err){
+				if(err){
+					log('could not delete info file. err: ' + err);
+				}
+				else{
+					log('Info file deleted!');
+				}
+			});
 		});
-}
 
-exports.run = function(){
-	//running the tests
-	testUtils.add(scenario1);
-	testUtils.add(scenario2);
-	testUtils.add(scenario3);
-	testUtils.add(scenario4);
-	testUtils.add(scenario5);
+		//create an invalid info file
+		fs.writeFileSync(infoPath, '{invalid json file}...');
 
-	testUtils.run();
-};
+		var mediaFile = new MediaFile(fileName, comedyFolder);
+
+		mediaFile.loadInfoFile()
+			.done(function(info){
+				test.fail('should not be able to load info file! : info: ' + JSON.stringify(info));
+			})
+			.fail(function(err){
+				console.log('\n' + JSON.stringify(err) + '\n');
+				test.end();
+			});
+	};
+
+	//test full scraping cycle
+	this.testScraping = function(test){
+		test.name = "Scraping info details.";
+
+		var fileName = 'The Campaign (2012).avi';
+		
+		//stub the scrape functions
+		MediaScraper.scrape = function(mediaFile){
+			//console.log(' *** (Stub) Running MediaScraper.scrape() stub. ***');
+			var p = new Promisse();
+			p.resolve({
+				"title" : "The Campaign",
+				"watched" : "false",
+				"imdb" : {
+					"title" : "The Campaign",
+					"year" : "2012",
+					"id" : "tt1790886",
+					"rating" : "6.2"
+				}
+			});
+			return p;
+		};
+
+		MediaFile.get(fileName, comedyFolder)
+			.done(function(mediaFile){
+
+				//console.log('mediaFile: ' + JSON.stringify(mediaFile));
+
+				//test the media file
+				test.assertNotNull(mediaFile, 'valid media file');
+
+				test.assertNotNull(mediaFile.info, 'media file with imdb metadata');
+
+				test.assertNotNull(mediaFile.info.imdb, 'media file with imdb metadata');
+
+				test.assertEqual(mediaFile.info.imdb.id, 'tt1790886', 'proper imdb id');
+
+				test.assertEqual(mediaFile.info.imdb.title, 'The Campaign', 'proper imdb title');
+
+				test.assertEqual(mediaFile.info.imdb.year, '2012', 'proper imdb year');
+
+				test.end();
+			})
+			.fail(function(err){
+				test.fail('should work! err: ' + JSON.stringify(err));
+			});
+	};
+});

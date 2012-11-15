@@ -1,5 +1,7 @@
 var Util = require("../util");
 
+var summary = exports.summary = {pass:0, fail:0};
+
 function pass(scenarioName, time){
 	var msg = ' (v) ' + scenarioName + '\n (Passed) ! ';
 
@@ -13,7 +15,6 @@ function pass(scenarioName, time){
 function fail(scenarioName, description){
 	console.log(' (X) ' + scenarioName + '\n (Failed) :-(\n' + description);
 }
-
 
 var scenarioList = new Array();
 Util.asCollection(scenarioList);
@@ -52,8 +53,12 @@ function run(func, scenarioName, nextCallBack){
 		end:function(){
 			//check if it was a clean run
 			if(cleanRun){
+				summary.pass++;
 				var endTime = new Date().getTime() - startTime;
 				pass(this.name, endTime);
+			}
+			else{
+				summary.fail++;
 			}
 			
 			try{
@@ -136,6 +141,7 @@ function run(func, scenarioName, nextCallBack){
 		throw err;
 	}
 }
+
 
 exports.pass = pass;
 exports.fail = fail;
