@@ -177,34 +177,39 @@ var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFold
 		myPromisse.resolve(mediaFile);
 	}
 	else{
-
+		//create a mediaFile instance
 		mediaFile = new MediaFile(fileName, mediaFolder, ext);
 
 		//add to the cache
 		mediaInfoCache[path] = mediaFile;
 
 		function infoLoaded(){
+			var imgExt = 'jpg';
+			var posterImgPath = mediaFile.getPosterFilePath(imgExt);
 
-			//check if the poster exists
-			fs.exists(mediaFile.getPosterFilePath(), function(exists){
+			//check if the poster image exists
+			fs.exists(posterImgPath, function(exists){
 				if(exists){
-					mediaFile.posterPath = mediaFile.getPosterFilePath();
+					mediaFile.posterPath = posterImgPath;
 					myPromisse.resolve(mediaFile);
 				}
 				else if(mediaFile.info && mediaFile.info.imdb && mediaFile.info.imdb.poster){
 					//download poster from the internet
-					var imgD = new ImgDownloader(mediaFile.info.imdb.poster, mediaFile.getPosterFilePath());
+					var imgD = MediaFile.getImgDownloader(mediaFile.info.imdb.poster, posterImgPath);
 					imgD.download()
 						.done(function(){
+							mediaFile.posterPath = posterImgPath;
 							myPromisse.resolve(mediaFile);
 						})
 						.fail(function(e){
 							//problems downloading image
 							console.log('Error downloading poster! : ' + JSON.stringify(e));
+							myPromisse.resolve(mediaFile);
 						});
 				}
 				else{
-					//do nothing since it could not find localy and also noe in scraped data.
+					console.log('(WARNING) There is no poster url in the media info : ' + mediaFile.getInfoFilePath());
+					//do nothing since it could not find localy and also not in scraped data.
 					myPromisse.resolve(mediaFile);
 				}
 			});
@@ -327,6 +332,14 @@ MediaFile.getScraper = function(mediaFile){
 	return new MediaScraper(mediaFile);
 };
 
+MediaFile.getImgDownloader = function(imgUrl, imgFilePath){
+	return new ImgDownloader(imgUrl, imgFilePath);
+};
+
+//clear the cache
+MediaFile.clearCache = function(){
+	mediaInfoCache = {};	
+};
 
 MediaFile.getYear = function(fileName){
 	//pattern to find the year in the string

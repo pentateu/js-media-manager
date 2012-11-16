@@ -118,4 +118,4 @@ var UtilTest = module.exports = new UnitTest(function(){
 	
 });
 
-UtilTest.filename = module.filename;
+UtilTest.setup(module);

@@ -104,4 +104,4 @@ var ImdbOrgScraperTest = module.exports = new UnitTest(function(){
 
 });
 
-ImdbOrgScraperTest.filename = module.filename;
+ImdbOrgScraperTest.setup(module);

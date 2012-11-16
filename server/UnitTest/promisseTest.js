@@ -225,4 +225,4 @@ var PromisseTest = module.exports = new UnitTest(function(){
 
 });//end of UnitTest
 
-PromisseTest.filename = module.filename;
+PromisseTest.setup(module);

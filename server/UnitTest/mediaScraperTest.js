@@ -74,4 +74,4 @@ var MediaScraperTest = module.exports = new UnitTest(function(){
 
 });
 
-MediaScraperTest.filename = module.filename;
+MediaScraperTest.setup(module);

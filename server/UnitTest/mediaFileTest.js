@@ -16,7 +16,6 @@ var comedyFolder = new MediaFolder({path:testConfig.baseTestMediaFolder + '/My M
 var newMoviesFolder = new MediaFolder({path:testConfig.baseTestMediaFolder + '/New Movies', type:'movies'});
 
 var MediaFileTest = module.exports = new UnitTest(function(){
-	
 	//test loading the info file
 	this.testLoadInfoFile = function(test){
 		test.name = "Test MediaFile.loadInfoFile() for an existing info file.";
@@ -163,15 +162,16 @@ var MediaFileTest = module.exports = new UnitTest(function(){
 			});
 	};
 
-	//test full scraping cycle
+	//test with scraping mock
 	this.testScrapingWithMockScraper = function(test){
-		test.name = "Scraping info details.";
-
+		
 		var fileName = 'The Campaign (2012).avi';
 		
 		//setup tear down
 		var infoFileName = 'The Campaign (2012).info';
 		var infoPath = pathLib.resolve(comedyFolder.path, infoFileName);
+		var posterImagePath = pathLib.resolve(comedyFolder.path, 'The Campaign (2012).jpg');
+		
 		test.tearDown(test.deleteFileTearDown(infoPath));
 
 		//stub the scrape functions
@@ -210,6 +210,93 @@ var MediaFileTest = module.exports = new UnitTest(function(){
 				test.assertEqual(mediaFile.info.imdb.title, 'The Campaign', 'proper imdb title');
 
 				test.assertEqual(mediaFile.info.imdb.year, '2012', 'proper imdb year');
+
+				//make sure no poster image has been downloaded
+				// /Users/rafaelalmeida/Developer/NodeJS/js-media-manager/media_unitTest_folders/My Movie Archive/Comedy/The Campaign (2012).info
+				test.assertFileDoesNotExist(posterImagePath, 'poster image sould not exist.');
+				//test.assertFileExist(posterImagePath, 'poster image should exist.');
+
+
+				test.end();
+			})
+			.fail(function(err){
+				test.fail('should work! err: ' + JSON.stringify(err));
+			});
+	};
+
+	//test with ImgDownloader mock
+	this.testScrapingWithMockImgDownloader = function(test){
+		var fileName = 'The Campaign (2012).avi';
+		
+		//setup tear down
+		var infoFileName = 'The Campaign (2012).info';
+		var infoPath = pathLib.resolve(comedyFolder.path, infoFileName);
+		var posterImagePath = pathLib.resolve(comedyFolder.path, 'The Campaign (2012).jpg');
+		
+		test.tearDown( [ test.deleteFileTearDown(infoPath), 
+						 test.deleteFileTearDown(posterImagePath) ] );
+
+		//clear the cache
+		MediaFile.clearCache();
+
+		//stub the scrape functions
+		MediaFile.getScraper = function(){
+			return {
+				scrape:function(mediaFile){
+					//console.log('(Mock Scraper) - ');
+					var p = new Promisse();
+					p.resolve({
+						"title" : "The Campaign",
+						"watched" : "false",
+						"imdb" : {
+							"title" : "The Campaign",
+							"year" : "2012",
+							"imdb_id" : "tt1790886",
+							"rating" : "6.2",
+							"poster" : "http://ia.media-imdb.com/images/M/MV5BMTY0NjI3MzM2Nl5BMl5BanBnXkFtZTcwNDgxNjA5Nw@@._V1._SY317_CR0,0,214,317_.jpg"
+						}
+					});
+					return p;
+				}
+			}
+		};
+
+		//stub the img downloader
+		MediaFile.getImgDownloader = function(url, filePath){
+			return {
+				download:function(){
+					var p = new Promisse();
+					//create a dummy file
+					fs.writeFileSync(filePath, 'Dummy file content !!!');
+
+					//console.log('(Mock ImgDownloader) Img poster file saved : ' + filePath);
+
+					p.resolve();
+					return p;
+				}
+			};
+		};
+
+		MediaFile.get(fileName, comedyFolder)
+			.done(function(mediaFile){
+
+				//test the media file
+				test.assertNotNull(mediaFile, 'valid media file');
+
+				test.assertNotNull(mediaFile.info, 'media file with imdb metadata');
+
+				test.assertNotNull(mediaFile.info.imdb, 'media file with imdb metadata');
+
+				test.assertEqual(mediaFile.info.imdb.imdb_id, 'tt1790886', 'proper imdb id');
+
+				test.assertEqual(mediaFile.info.imdb.title, 'The Campaign', 'proper imdb title');
+
+				test.assertEqual(mediaFile.info.imdb.year, '2012', 'proper imdb year');
+
+				//validate poster image
+				//make sure no poster image has been downloaded
+				test.assertFileExist(posterImagePath, 'poster image should exist.');
+				test.assertEqual(mediaFile.posterPath, posterImagePath, 'proper imdb year');
 
 				test.end();
 			})
@@ -353,4 +440,4 @@ var MediaFileTest = module.exports = new UnitTest(function(){
 	};
 });
 
-MediaFileTest.filename = module.filename;
+MediaFileTest.setup(module);

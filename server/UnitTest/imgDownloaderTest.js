@@ -37,4 +37,4 @@ var ImgDownloaderTest = module.exports = new UnitTest(function(){
 
 });
 
-ImgDownloaderTest.filename = module.filename;
+ImgDownloaderTest.setup(module);

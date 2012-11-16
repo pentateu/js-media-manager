@@ -32,8 +32,22 @@ var UnitTest = module.exports = function(unitTest) {
 		return p;
 	};
 
+	//run this test case as a stand alone and create it's own summary and print the summary at the end
+	this.runStandAlone = function(){
+		UnitTest.runAll([this]);
+	};
+
+	this.setup = function(testClassModule){
+		//set name
+		this.filename = testClassModule.filename;
+
+		if( ! testClassModule.parent){
+			this.runStandAlone();
+		}
+	};
+
 	//run the test cases
-	var run = this.run = function(summary){
+	this.run = function(summary){
 		//go throught each test function
 		for(var testFunc in unitTest){
 			//check if it is a test function
@@ -80,8 +94,8 @@ var UnitTest = module.exports = function(unitTest) {
 
 			fail:function(desc){
 				cleanRun = false;
-				console.log('(FAIL) ' + this.name + ' XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
-				console.log('        ' +  desc);
+				console.log('(FAIL) ' + this.name + ' XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
+				console.log('   --> ' +  desc);
 			},
 
 			end:function(){
@@ -117,32 +131,46 @@ var UnitTest = module.exports = function(unitTest) {
 					}
 				}
 
-				try{
-					if(tearDownFunc){
-						//var scenarioName = this.name;
-						var result = tearDownFunc.call(testContext, function(msg){
-							if(msg && typeof msg == "string"){
-								console.log("(TearDown) - " + testFunc + "() - " + msg);
-							}
-						});
+				if(tearDownFunc){
+					//check if it is an array
+					if(tearDownFunc instanceof Array){
+						Util.asCollection(tearDownFunc);
+					}
+					else{
+						tearDownFunc = [tearDownFunc];
+						Util.asCollection(tearDownFunc);
+					}
+
+					tearDownFunc.iterate(function(it, func){
+						try{
+							var result = func.call(testContext, function(msg){
+								if(msg && typeof msg == "string"){
+									console.log("(TearDown OK) - " + testFunc + "() - " + msg);
+								}
+							});
+						}
+						catch(err){
+							console.log('(TearDown ERROR) - Problem trying to execute TearDown function err: ' + JSON.stringify(err) + ' message: ' + err);
+						}
+
 						//check if the result is a promisse
 						if(typeof(result) != 'undefined' && result.done){
 							result.done(function(){
-								callEndCallBack();
+								it.next();
 							});
 						}
 						else{
-							callEndCallBack();
+							it.next();
 						}
-					}
-					else{
+					},
+					function(){
+						//end of list
 						callEndCallBack();
-					}
+					});
 				}
-				catch(err){
-					console.log('error trying to execute tearDown. err: ' + JSON.stringify(err));
+				else{
+					callEndCallBack();
 				}
-				
 			},
 			assertEqual:function(value, expected, description){
 				if(value === expected){
@@ -198,18 +226,19 @@ var UnitTest = module.exports = function(unitTest) {
 			},
 			deleteFileTearDown:function(filePath){
 				return function(log){
-					var p = new Promisse();
 					//delete the info file
-					fs.unlink(filePath, function(err){
-						if(err){
-							log('could not delete file. err: ' + err);
-						}
-						else{
-							log('File deleted : ' + filePath);
-						}
-						p.resolve();
-					});
-					return p;
+					fs.unlinkSync(filePath);
+					log('File deleted : ' + filePath);
+				};
+			},
+			assertFileDoesNotExist:function(filePath, description){
+				if(fs.existsSync(filePath)){
+					this.fail(description);
+				}
+			},
+			assertFileExist:function(filePath, description){
+				if( ! fs.existsSync(filePath)){
+					this.fail(description);
 				}
 			}
 		};
@@ -234,6 +263,44 @@ var UnitTest = module.exports = function(unitTest) {
 			//throw err;
 		}
 	}
+
+};
+
+UnitTest.runAll = function(list){
+	//make sure it is a collection
+	Util.asCollection(list);
+
+	var passTotal = 0;
+	var failTotal = 0;
+
+	//summary object
+	var summary = {
+		pass:function(){
+			passTotal++;
+		}, 
+		fail:function(){
+			failTotal++;
+		}
+	};
+
+
+	list.iterate(
+		function(it, testObject){
+			//on each item 
+			testObject.getPromisse().done(function(){
+				it.next();
+			});
+
+			console.log('\n------------------------------------------------------------------------------------------------------------');
+			console.log('Running tests on : ' + testObject.filename);
+			testObject.run(summary);
+		}, 
+		function(){
+			//at the end of the 
+			console.log('\n***************************************************************************************************************');
+			console.log('* -> Result Summary: UnitTest files: ' + list.size() + ' | Test Cases PASS: ' + passTotal + ' FAIL: ' + failTotal);	
+			console.log('***************************************************************************************************************');
+		});
 
 };
 

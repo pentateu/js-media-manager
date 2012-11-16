@@ -3,8 +3,8 @@ js-media-manager
 
 Media Manager app with Win 8 metro style UI and NodeJS backend.
 
-Dependencies:
+Product Backlog:
 
-Gently - for unit testing
-npm install gently@latest
-
+ - Test case for MediaFolder
+ - Scan for new media on start-up
+ - Save a database of the media to support search and other features

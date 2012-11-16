@@ -37,7 +37,6 @@ var MediaFolder = module.exports = function(folderInfo) {
 				//check if it is a file
 				if(stats.isFile()){
 					nothingFound = false;
-					//pending++;
 					myPromisse.chain(
 						MediaFile.get(file, mediaFolder, stats).
 							done(function(mediaFile){
@@ -53,9 +52,7 @@ var MediaFolder = module.exports = function(folderInfo) {
 				}
 				else if(stats.isDirectory()){
 					nothingFound = false;
-
 					var subMediaFolder = new MediaFolder({path:fullPath, type:folderInfo.type, parent:mediaFolder});
-
 					//keep reading sub-folders
 					myPromisse.chain(subMediaFolder.scan(mediaList));
 				}
