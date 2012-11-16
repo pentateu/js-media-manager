@@ -2,9 +2,9 @@
 var fs	 	= require('fs'); 
 var pathLib = require('path');
 
-var Promisse = require("./promisse");
-
-var MediaScraper = require("./mediaScraper");
+var Promisse 		= require("./promisse");
+var Util 			= require('./util');
+var MediaScraper 	= require("./mediaScraper");
 
 //local vars
 var mediaInfoCache = {};
@@ -17,16 +17,10 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 
 	//validate parameters
 	if( ! fileName){
-		throw {
-			code:ERROR_FILENAME_REQUIRED,
-			message:"The fileName parameter is required."
-		};
+		throw MediaFile.ERROR_FILENAME_REQUIRED;
 	}
 	if( ! mediaFolder){
-		throw {
-			code:ERROR_MEDIAFOLDER_REQUIRED,
-			message:"The mediaFolder parameter is required."
-		};
+		throw MediaFile.ERROR_MEDIAFOLDER_REQUIRED;
 	}
 
 	if( ! ext){
@@ -34,13 +28,17 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 	}
 
 	//constructor
-	this.fileName = fileName;
 	this.mediaFolder = mediaFolder;
+	this.fileName = fileName;
+	//title
+	this.title = MediaFile.cleanTitle(fileName);
+	this.year = MediaFile.getYear(fileName);
 	this.extension = ext;
 
 	//private vars
 	//info object for this media file
 	var info = null;
+
 	//Info state:
 	//0 : Don't exist
 	//1 : now saved
@@ -58,8 +56,6 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 	//save the info for this Media File
 	var save = this.save = function(){
 		var p = new Promisse();
-
-		//console.log('mediaFile.save() - infoState: ' + infoState);
 
 		if(infoState === 1){
 			
@@ -87,10 +83,8 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 	var getInfoFilePath = this.getInfoFilePath = function(){
 		//infoFileName
 		var infoFileName = fileName.replace('.' + ext, '.info');
-		
 		//path for info file
 		var path = pathLib.resolve(mediaFolder.path, infoFileName);
-
 		return path;
 	};
 
@@ -103,8 +97,8 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 		fs.readFile(path, function(err, data){
 			//check for errors
 			if (err){
-				p.reject({code:ERROR_INFO_CANT_OPEN, cause:err});
-				return;
+				p.reject(MediaFile.ERROR_INFO_CANT_OPEN.setCause(err));
+				return p;
 			}
 
 			var info = null;
@@ -114,9 +108,8 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 				p.resolve(info);
 			}
 			catch(err){
-				//console.log('could not parse the info file: ' + err);
-				p.reject({code:ERROR_INFO_CANT_PARSE, cause:err});
-				return;
+				p.reject(MediaFile.ERROR_INFO_CANT_PARSE.setCause(err));
+				return p;
 			}
 		});
 		return p;
@@ -191,11 +184,12 @@ var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFold
 			.fail(function(err){
 				//failed to load the info file
 				//check error code
-				if(err.code === ERROR_INFO_CANT_OPEN || err.code === ERROR_INFO_CANT_PARSE){
+				if(err === MediaFile.ERROR_INFO_CANT_OPEN || err === MediaFile.ERROR_INFO_CANT_PARSE){
 					console.log('info not found, or could not be opened - scrape from the internet!');
 					
 					//Condition 2: info scraped
-					MediaScraper.scrape(mediaFile)
+					var mediaScraper = MediaFile.getScraper(mediaFile);
+					mediaScraper.scrape()
 						.done(function(info){
 							//media details was found by the scrapers and the info object is returned
 							mediaFile.info = info;
@@ -218,13 +212,106 @@ var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFold
 	return myPromisse;
 };
 
+//CleanUp object
+var CleanUp = function(opt){
+	var regExp = opt.regExp;
+	var replacement = opt.replacement;
+
+	this.run = function(value){
+		var prevValue = "";
+		//run the replacement while the string size remain the same
+		while(prevValue !== value){
+			try{
+				prevValue = value;
+				value = value.replace(regExp, replacement);
+			}
+			catch(e){
+				console.log('(Warning) Error when running cleanUp: ' + JSON.stringify(e));
+				//ignore replace errors
+			}
+		}
+		return value;
+	};
+};
+
+var mediaTitleCleanUp = MediaFile.mediaTitleCleanUp = new Array();
+Util.asCollection(mediaTitleCleanUp);
+
+//Regular expression to clean-up the file extension
+mediaTitleCleanUp.add(new CleanUp({
+	regExp:/\.\w{3}$/,
+	replacement:''
+}));
+
+//Regular expression to clean-up the year from the filename
+mediaTitleCleanUp.add(new CleanUp({
+	regExp:/(\(\d{4}\)|\.\d{4})/g,
+	replacement:''
+}));
+
+// file info 
+mediaTitleCleanUp.add(new CleanUp({
+	regExp:/(2\.Aud)|(AC3)|(5\.1)|(\.JP)|(\.BR)|(])|(2\.Sub)|(\.EN)|(720p)|(720)|(\d{6})|(ddlsource\.com)|(HDrip)|(ViBE)|(extended)|(\.dc)|(bluray)|(dts)|(x264)|(publichd)|(DVDRip)/gi,
+	replacement:''
+}));
+
+//replace . - _ (double spaces) for spaces
+mediaTitleCleanUp.add(new CleanUp({
+	regExp:/(-)|(\_)|(\.)|(\s{2})|(\s{3})/g,
+	replacement:' '
+}));
+
+//remove white space at the begining and at the end of the file name
+mediaTitleCleanUp.add(new CleanUp({
+	regExp:/(^\s)|(\s$)/g,
+	replacement:''
+}));
+
+MediaFile.capitalize = function(str)
+{
+    return str.replace(/\w\S*/g, function(txt){
+    	return txt.charAt(0).toUpperCase() + txt.substr(1);
+    });
+}
+
+//return the media title clean for a given media file
+MediaFile.cleanTitle = function(title){
+	//clean-up the file name using regular expressions
+	mediaTitleCleanUp.forEach(function(cleanUp){
+		//replace using the regular expression
+		title = cleanUp.run(title);
+	});
+	return MediaFile.capitalize(title);
+};
+
+MediaFile.getScraper = function(mediaFile){
+	return new MediaScraper(mediaFile);
+};
+
+
+MediaFile.getYear = function(fileName){
+	//pattern to find the year in the string
+	var pattFind = /\(\d{4}\)|\.\d{4}/;
+
+	//pattern to clean-up the year sonce extracted - remove ( ) and .
+	var pattCleanup = /\.|\(|\)/g;
+
+	var result = pattFind.exec(fileName);
+
+	if(result){
+		return result.toString().replace(pattCleanup, '');
+	}
+	else{
+		return null;
+	}
+};
 
 //constants
 //error codes
-var ERROR_INFO_CANT_OPEN 	= MediaFile.ERROR_INFO_CANT_OPEN 			= 1001;
-var ERROR_INFO_CANT_PARSE 	= MediaFile.ERROR_INFO_CANT_PARSE 			= 1002;
-var ERROR_SAVING_INFO 		= MediaFile.ERROR_SAVING_INFO 				= 1003;
-var ERROR_FILENAME_REQUIRED 	= MediaFile.ERROR_FILENAME_REQUIRED 	= 1004;
-var ERROR_MEDIAFOLDER_REQUIRED 	= MediaFile.ERROR_MEDIAFOLDER_REQUIRED 	= 1005;
+MediaFile.ERROR_INFO_CANT_OPEN 			= Util.exception({message:"Can't Open Info file."});
+MediaFile.ERROR_INFO_CANT_PARSE 		= Util.exception({message:"Can't Parse Info file."});
+MediaFile.ERROR_SAVING_INFO 			= Util.exception({message:"Can't Save Info file."});
+MediaFile.ERROR_FILENAME_REQUIRED 		= Util.exception({message:"fileName is required."});
+MediaFile.ERROR_MEDIAFOLDER_REQUIRED 	= Util.exception({message:"mediaFolder is required."});
 
 

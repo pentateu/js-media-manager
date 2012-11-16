@@ -26,21 +26,20 @@ var validateParameter = exports.validateParameter = function(parameterValue, val
 
 //Definition of the Exception object
 var Exception = function(options){
-	var code = this.code = null;
-	var message = this.message = null;
-	var cause = this.cause = null;
+	this.code 		= null;
+	this.message 	= null;
+	this.cause 		= null;
 
 	if(options){
-		code = options.code;
-		message = options.message;
-		cause = options.cause;
+		this.code 		= options.code;
+		this.message 	= options.message;
+		this.cause 		= options.cause;
 	}
 
 	this.setCause = function(val){
-		cause = val;
+		this.cause = val;
 		return this;
 	};
-	
 	return this;
 }
 
@@ -98,6 +97,13 @@ var asCollection = exports.asCollection = function(array){
 		};
 
 		//call for first item
-		fn(it, item);
+		if(array.length > 0){
+			fn(it, item);
+		}
+		else{
+			if(endFn){
+				endFn();
+			}
+		}
 	};
 };
