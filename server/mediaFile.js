@@ -6,6 +6,8 @@ var Promisse 		= require("./promisse");
 var Util 			= require('./util');
 var MediaScraper 	= require("./mediaScraper");
 
+var ImgDownloader	 = require('./imgDownloader');
+
 //local vars
 var mediaInfoCache = {};
 
@@ -54,12 +56,12 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
     });
 
 	//save the info for this Media File
-	var save = this.save = function(){
+	this.save = function(){
 		var p = new Promisse();
 
 		if(infoState === 1){
 			
-			var infoFilePath = getInfoFilePath();
+			var infoFilePath = this.getInfoFilePath();
 
 			//save the info to the disk
 			fs.writeFile(infoFilePath, JSON.stringify(info), function (err) {
@@ -80,7 +82,7 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 		return p;
 	};
 
-	var getInfoFilePath = this.getInfoFilePath = function(){
+	this.getInfoFilePath = function(){
 		//infoFileName
 		var infoFileName = fileName.replace('.' + ext, '.info');
 		//path for info file
@@ -88,10 +90,18 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 		return path;
 	};
 
+	this.getPosterFilePath = function(imgExt){
+		//infoFileName
+		var imgFileName = fileName.replace('.' + ext, '.' + imgExt);
+		//path for info file
+		var path = pathLib.resolve(mediaFolder.path, imgFileName);
+		return path;
+	};
+
 	var loadInfoFile = this.loadInfoFile = function(){
 		var p = new Promisse();
 
-		var path = getInfoFilePath(fileName, mediaFolder, ext);
+		var path = this.getInfoFilePath(fileName, mediaFolder, ext);
 
 		//open file
 		fs.readFile(path, function(err, data){
@@ -173,13 +183,41 @@ var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFold
 		//add to the cache
 		mediaInfoCache[path] = mediaFile;
 
+		function infoLoaded(){
+
+			//check if the poster exists
+			fs.exists(mediaFile.getPosterFilePath(), function(exists){
+				if(exists){
+					mediaFile.posterPath = mediaFile.getPosterFilePath();
+					myPromisse.resolve(mediaFile);
+				}
+				else if(mediaFile.info && mediaFile.info.imdb && mediaFile.info.imdb.poster){
+					//download poster from the internet
+					var imgD = new ImgDownloader(mediaFile.info.imdb.poster, mediaFile.getPosterFilePath());
+					imgD.download()
+						.done(function(){
+							myPromisse.resolve(mediaFile);
+						})
+						.fail(function(e){
+							//problems downloading image
+							console.log('Error downloading poster! : ' + JSON.stringify(e));
+						});
+				}
+				else{
+					//do nothing since it could not find localy and also noe in scraped data.
+					myPromisse.resolve(mediaFile);
+				}
+			});
+		}
+
 		//no media in cache
 		//1: try to load the info file
 		mediaFile.loadInfoFile()
 			.done(function(info){
 				//Condition 1: info loaded (unit tested !)
 				mediaFile.info = info;
-				myPromisse.resolve(mediaFile);
+				//myPromisse.resolve(mediaFile);
+				infoLoaded();
 			})
 			.fail(function(err){
 				//failed to load the info file
@@ -195,7 +233,8 @@ var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFold
 							mediaFile.info = info;
 							mediaFile.save()
 								.done(function(){
-									myPromisse.resolve(mediaFile);
+									//myPromisse.resolve(mediaFile);
+									infoLoaded();
 								})
 								.fail(function(err){
 									//error when saving media info details

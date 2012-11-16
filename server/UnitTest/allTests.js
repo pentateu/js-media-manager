@@ -9,7 +9,7 @@ tests.push(require('./promisseTest'));
 tests.push(require('./mediaFileTest'));
 tests.push(require('./imdbScraperTest'));
 tests.push(require('./imdbOrgScraperTest'));
-
+tests.push(require('./imgDownloaderTest'));
 
 var passTotal = 0;
 var failTotal = 0;
