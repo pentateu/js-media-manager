@@ -1,28 +1,4 @@
-
-
-var validateParameter = exports.validateParameter = function(parameterValue, validValues, parameterName){
-
-	var match = false;
-	var validValuesMessage = "";
-
-	for (var i = 0; i < validValues.length; i++) {
-		if(validValues[i] === parameterValue){
-			match = true;
-		}
-		validValuesMessage += " " + validValues[i];
-	};
-
-	if( ! match){
-		var message = "";
-		if(parameterName){
-			message = "Invalid value for the " + parameterName + " parameter. The possible values are: " + validValuesMessage;
-		}
-		else{
-			message = "Invalid parameter value . The possible values are: " + validValuesMessage;	
-		}
-		throw message; 
-	}
-};
+var nodeUtil = require("util");
 
 //Definition of the Exception object
 var Exception = function(options){
@@ -41,69 +17,113 @@ var Exception = function(options){
 		return this;
 	};
 	return this;
-}
-
-var exception = exports.exception = function(options){
-	return new Exception(options);
 };
 
-//extend the object with collection methods
-//forEach, iterate and etc
-var asCollection = exports.asCollection = function(array){
-	//add a mediaInfo to the list
-	array.add = function(item){
-		array.push(item);
-	};
+var Util = function() {
+	//make sure it behaves as a constructor
+	if ( ! (this instanceof Util) ) {
+		return new Util();
+	}
 
-	//return the size of the media list
-	array.size = function(){
-		return array.length;
-	};
+	//copy some nodeJS util functions
+	this.inherits = nodeUtil.inherits;
 
-	//for each
-	array.forEach = function(fn) {
-		for (var i = 0; i < array.length; i++) {
-			var item = array[i];
-			if (fn(item) === false) {
-				//stop the loop
-				break;
+	this.inspect = nodeUtil.inspect;
+
+	this.warn = nodeUtil.debug;
+	this.debug = nodeUtil.debug;
+	this.error = nodeUtil.error;
+
+	this.validateParameter = function(parameterValue, validValues, parameterName){
+
+		var match = false;
+		var validValuesMessage = "";
+
+		for (var i = 0; i < validValues.length; i++) {
+			if(validValues[i] === parameterValue){
+				match = true;
 			}
+			validValuesMessage += " " + validValues[i];
+		};
+
+		if( ! match){
+			var message = "";
+			if(parameterName){
+				message = "Invalid value for the " + parameterName + " parameter. The possible values are: " + validValuesMessage;
+			}
+			else{
+				message = "Invalid parameter value . The possible values are: " + validValuesMessage;	
+			}
+			throw message; 
 		}
 	};
 
-	array.iterate = function(fn, endFn){
-		var idx = 0;
-		var item = array[idx];
-		
-		var it = {
-			next:function(){
-				if(idx < (array.length -1)){
-					//keep going
-					idx++;
-					item = array[idx];
-					//call for subsequente items,
-					fn(it, item);
+	this.exception = function(options){
+		return new Exception(options);
+	};
+
+	//extend the object with collection methods
+	//forEach, iterate and etc
+	this.asCollection = function(array){
+		//add a mediaInfo to the list
+		array.add = function(item){
+			array.push(item);
+		};
+
+		//return the size of the media list
+		array.size = function(){
+			return array.length;
+		};
+
+		//for each
+		array.forEach = function(fn) {
+			for (var i = 0; i < array.length; i++) {
+				var item = array[i];
+				if (fn(item, i) === false) {
+					//stop the loop
+					break;
 				}
-				else{
-					//end of list
-					it.end();
+			}
+		};
+
+		array.iterate = function(fn, endFn){
+			var idx = 0;
+			var item = array[idx];
+			
+			var it = {
+				next:function(){
+					if(idx < (array.length -1)){
+						//keep going
+						idx++;
+						item = array[idx];
+						//call for subsequente items,
+						fn(it, item);
+					}
+					else{
+						//end of list
+						it.end();
+					}
+				},
+				end:function(){
+					if(endFn){
+						endFn();
+					}
 				}
-			},
-			end:function(){
+			};
+
+			//call for first item
+			if(array.length > 0){
+				fn(it, item);
+			}
+			else{
 				if(endFn){
 					endFn();
 				}
 			}
 		};
-
-		//call for first item
-		if(array.length > 0){
-			fn(it, item);
-		}
-		else{
-			if(endFn){
-				endFn();
-			}
-		}
+		return array;
 	};
 };
+
+//export a singleton of the Util object
+module.exports = new Util();

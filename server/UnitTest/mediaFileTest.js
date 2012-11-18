@@ -12,8 +12,8 @@ var UnitTest = require('./unitTest');
 //load test config
 var testConfig = JSON.parse(fs.readFileSync('./testConfig.json'));
 
-var comedyFolder = new MediaFolder({path:testConfig.baseTestMediaFolder + '/My Movie Archive/Comedy', type:'movies'});
-var newMoviesFolder = new MediaFolder({path:testConfig.baseTestMediaFolder + '/New Movies', type:'movies'});
+var comedyFolder = MediaFolder.get({path:testConfig.baseTestMediaFolder + '/My Movie Archive/Comedy', type:'movies'});
+var newMoviesFolder = MediaFolder.get({path:testConfig.baseTestMediaFolder + '/New Movies', type:'movies'});
 
 var MediaFileTest = module.exports = new UnitTest(function(){
 	//test loading the info file
@@ -40,7 +40,7 @@ var MediaFileTest = module.exports = new UnitTest(function(){
 		var fileName, mediaFolder;
 
 		fileName = 'Expendables 2 (2012).mkv';
-		mediaFolder = new MediaFolder({path:testConfig.baseTestMediaFolder + '/New Movies', type:'movies'});
+		mediaFolder = MediaFolder.get({path:testConfig.baseTestMediaFolder + '/New Movies', type:'movies'});
 
 		var mediaFile = new MediaFile(fileName, mediaFolder);
 
@@ -53,7 +53,7 @@ var MediaFileTest = module.exports = new UnitTest(function(){
 
 				test.assertEqual(info.title, 'The Expendables 2', 'proper imdb title');
 
-				test.assertFalse(info.watched, 'watched false');
+				test.assertEqual(info.watched, "false", 'watched false');
 
 				test.assertEqual(info.imdb.imdb_id, 'tt1764651', 'proper imdb id');
 
@@ -95,7 +95,7 @@ var MediaFileTest = module.exports = new UnitTest(function(){
 					var savedInfo = JSON.parse(fs.readFileSync(infoPath));
 					
 					test.assertEqual(savedInfo.title, "The Campaign", 'same title');
-					test.assertFalse(savedInfo.watched, 'watched is false');
+					test.assertEqual(savedInfo.watched, "false", 'watched is false');
 					test.assertNotNull(savedInfo.imdb, 'imdb not null');
 					test.assertEqual(savedInfo.imdb.year, "2012", 'same year');
 

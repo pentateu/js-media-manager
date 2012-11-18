@@ -15,7 +15,7 @@ var Promisse = module.exports = function(options) {
 	 * 1 : done / resolved
 	 * 2 : fail / rejected
 	 */
-	var state = this.state = PENDING;
+	this.state = PENDING;
 
 	var args = null;//arguments sent when resolve was called
 
@@ -49,11 +49,11 @@ var Promisse = module.exports = function(options) {
 
 	//add a callback to be called when the promisse is 'done'
 	this.done = function(handler){
-		if(state === RESOLVED){//invoke now !
+		if(instance.state === RESOLVED){//invoke now !
 			handler.apply(instance, args);
 		}
-		else if(state === PENDING){
-			//pending state.. add to the queue
+		else if(instance.state === PENDING){
+			//pending instance.state.. add to the queue
 			doneHandlers.push(handler);
 		}
 		return instance;
@@ -61,11 +61,11 @@ var Promisse = module.exports = function(options) {
 
 	//add a callback to be called when the promisse has 'failed'
 	this.fail = function(handler){
-		if(state === REJECTED){//invoke now
+		if(instance.state === REJECTED){//invoke now
 			handler.apply(instance, args);
 		}
-		else if(state === PENDING){
-			//pending state.. add to the queue
+		else if(instance.state === PENDING){
+			//pending instance.state.. add to the queue
 			failHandlers.push(handler);
 		}
 		return instance;
@@ -74,8 +74,8 @@ var Promisse = module.exports = function(options) {
 	//resolve the promisse
 	this.resolve = function(){
 		args = arguments;
-		if(state === PENDING){
-			state = RESOLVED;
+		if(instance.state === PENDING){
+			instance.state = RESOLVED;
 			//call the doneHandlers
 			for (var i = 0; i < doneHandlers.length; i++) {
 				doneHandlers[i].apply(instance, args);
@@ -88,8 +88,8 @@ var Promisse = module.exports = function(options) {
 	//reject the promisse
 	this.reject = function(){
 		args = arguments;
-		if(state === PENDING){
-			state = REJECTED;
+		if(instance.state === PENDING){
+			instance.state = REJECTED;
 			//call the doneHandlers
 			for (var i = 0; i < failHandlers.length; i++) {
 				failHandlers[i].apply(instance, args);
@@ -125,24 +125,40 @@ var Promisse = module.exports = function(options) {
 
 	//chain another promisse
 	this.chain = function(anotherPromisse){
-		if(state === PENDING){ //can only chain promisses when is still at a pending state
-			chainCounter++;
-			anotherPromisse.done(function(){
-				chainArgsArray.push(arguments);
-				//when any event happes in the other promisse
-				chainCounter--;
-				if(chainCounter === 0){
-					resolveChain();
-				}
-			});
-			anotherPromisse.fail(function(err){
-				chainErrors.push(err);
-				//when any event happes in the other promisse
-				chainCounter--;
-				if(chainCounter === 0){
-					resolveChain();
-				}
-			});
+		if(instance.state === PENDING){ //can only chain promisses when is still at a pending instance.state
+
+			//check if the other promisse is still pending
+			if(anotherPromisse.state === PENDING){
+				chainCounter++;
+				anotherPromisse.done(function(){
+					chainArgsArray.push(arguments);
+					//when any event happens in the other promisse
+					chainCounter--;
+					if(chainCounter === 0){
+						resolveChain();
+					}
+				})
+				.fail(function(err){
+					chainErrors.push(err);
+					//when any event happes in the other promisse
+					chainCounter--;
+					if(chainCounter === 0){
+						resolveChain();
+					}
+				});
+			}
+			else{
+				//Util.debug("[Promisse] adding a promisse that is not pending: " + anotherPromisse.state);
+				anotherPromisse.done(function(){
+					chainArgsArray.push(arguments);
+				})
+				.fail(function(err){
+					chainErrors.push(err);
+				});
+			}
+		}
+		else{
+			Util.debug("[Promisse] (WARNING) cannot chain any more primisses, state is now: " + instance.state);
 		}
 		return instance;
 	};

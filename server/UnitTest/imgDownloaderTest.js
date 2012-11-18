@@ -12,7 +12,7 @@ var ImgDownloader = require('../imgDownloader');
 //load test config
 var testConfig = JSON.parse(fs.readFileSync('./testConfig.json'));
 
-var newMoviesFolder = new MediaFolder({path:testConfig.baseTestMediaFolder + '/New Movies', type:'movies'});
+var newMoviesFolder = MediaFolder.get({path:testConfig.baseTestMediaFolder + '/New Movies', type:'movies'});
 
 //Object Definition
 var ImgDownloaderTest = module.exports = new UnitTest(function(){

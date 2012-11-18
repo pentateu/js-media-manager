@@ -60,21 +60,47 @@ var UnitTest = module.exports = function(unitTest) {
 			}
 		}
 
-		scenarioList.iterate(function(it, testFunc){
-			invokeTest(testFunc, summary, function(){
-				//only execute the next test case when the previous has finished.
-				it.next();
+		function exexuteTestCases(){
+			scenarioList.iterate(function(it, testFunc){
+				console.log('\n(Start) test function : ' + testFunc);
+				invokeWithTestContext(testFunc, summary, function(){
+					//only execute the next test case when the previous has finished.
+					it.next();
+				});
+			},
+			function(){
+				//execute the global tearDown function
+				if(unitTest.tearDown){
+					console.log('\n(GLOBAL TearDown Method)');
+					invokeWithTestContext('tearDown', null, function(){
+						//when finished, complete the promisse
+						p.resolve();
+					});
+				}
+				else{
+					//when finished, complete the promisse
+					p.resolve();
+				}
 			});
-		},
-		function(){
-			//when finished, complete the promisse
-			p.resolve();
-		});
+		}
+
+		//execute the global setup function
+		if(unitTest.setup){
+			console.log('\n(GLOBAL Setup Method)');
+			invokeWithTestContext('setup', null, function(){
+				exexuteTestCases();
+			});
+		}
+		else{
+			exexuteTestCases();
+		}
+
+		
 		return p;
 	};
 
 
-	function invokeTest(testFunc, summary, endCallBack){
+	function invokeWithTestContext(testFunc, summary, endCallBack){
 
 		var cleanRun = true;
 		var tearDownFunc = null;
@@ -82,8 +108,6 @@ var UnitTest = module.exports = function(unitTest) {
 		var startTime = new Date().getTime();
 
 		var testContext = {
-			name:"",
-
 			newTimeOut:function(newValue){
 				console.log(' Setting a new timeout for this test case : ' + newValue);
 				//cancel previous timer
@@ -94,8 +118,19 @@ var UnitTest = module.exports = function(unitTest) {
 
 			fail:function(desc){
 				cleanRun = false;
-				console.log('(FAIL) ' + this.name + ' XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
-				console.log('   --> ' +  desc);
+				console.log('(FAIL) XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
+				console.trace('--> ' +  desc);
+				//console.trace(
+			},
+
+			evaluate:function(func){
+				try{
+					func.call(testContext, testContext);
+				}
+				catch(e){
+					console.trace('Error on testContext.evaluate() : ' + Util.inspect(e));
+					testContext.end();
+				}
 			},
 
 			end:function(){
@@ -112,7 +147,7 @@ var UnitTest = module.exports = function(unitTest) {
 					//call the elapsed time
 					var totalTime = new Date().getTime() - startTime;
 					//print pass message
-					console.log('(PASS) ' + totalTime + ' milis. - ' + this.name);
+					console.log('(PASS) ' + totalTime + ' milis. ');
 				}
 				else{
 					if(summary){
@@ -197,9 +232,21 @@ var UnitTest = module.exports = function(unitTest) {
 				}
 			},
 			assertFalse:function(value, description){
-				if(value === true){
+				if(value === false){
+					//all good
+				}
+				else{
 					cleanRun = false;
-					this.fail(description +  " - Value should not be false.");
+					this.fail(description +  " - Value should be false - value: " + value);
+				}
+			},
+			assertTrue:function(value, description){
+				if(value === true){
+					//all good
+				}
+				else{
+					cleanRun = false;
+					this.fail(description +  " - Value should be true - value: " + value);
 				}
 			},
 			assertThrows:function(func, description){
@@ -224,11 +271,38 @@ var UnitTest = module.exports = function(unitTest) {
 			tearDown:function(func){
 				tearDownFunc = func;
 			},
-			deleteFileTearDown:function(filePath){
+			deleteFileTearDown:function(filePath, ignoreErrors){
 				return function(log){
-					//delete the info file
-					fs.unlinkSync(filePath);
-					log('File deleted : ' + filePath);
+					try{
+						//delete the file
+						fs.unlinkSync(filePath);
+						log('File deleted : ' + filePath);
+					}
+					catch(e){
+						if(ignoreErrors === true){
+							//do nothing
+						}
+						else{
+							throw e;
+						}
+					}
+				};
+			},
+			deleteFolderTearDown:function(folderPath, ignoreErrors){
+				return function(log){
+					try{
+						//delete the file
+						fs.rmdirSync(folderPath);
+						log('Folder deleted : ' + folderPath);
+					}
+					catch(e){
+						if(ignoreErrors === true){
+							//do nothing
+						}
+						else{
+							throw e;
+						}
+					}
 				};
 			},
 			assertFileDoesNotExist:function(filePath, description){
@@ -253,14 +327,13 @@ var UnitTest = module.exports = function(unitTest) {
 		var endCheckerTimer = setTimeout(cancelRunnintTestCase, TEST_TIMEOUT);
 
 		try{
-			console.log('\n(Start) test function : ' + testFunc);
-			//invoke the test function
+			//invoke the function passing the testContext
 			unitTest[testFunc].call(testContext, testContext);
 		}
 		catch(err){
 			cleanRun = false;
 			testContext.fail('Error: ' + err);
-			//throw err;
+			testContext.end();
 		}
 	}
 

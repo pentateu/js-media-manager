@@ -104,6 +104,32 @@ var PromisseTest = module.exports = new UnitTest(function(){
 		child2.resolve('second result');
 	};
 
+	this.testChain_DoneCalledOutOfOrder = function(test){
+		var p = new Promisse();
+
+		p.done(function(result){
+			//check if the resuls is a array with 2 items
+			test.assertEqual(result.length, 2, 'there should be 2 result items from the chain');
+
+			test.assertEqual(result[0][0], "first result", 'first result is incorrect.');
+			test.assertEqual(result[1][0], "second result", 'second result is incorrect.');
+
+			test.end();
+		});
+
+		p.fail(function(listOfErrors){
+			test.fail('there is no errors in the chain');
+		});
+
+		var child1 = new Promisse();
+		var child2 = new Promisse();
+
+		child1.resolve('first result');
+		p.chain(child1);
+		p.chain(child2);
+		child2.resolve('second result');
+	};
+
 	//Test Scenario 4 - chaining multiple promisse objects and failing one child with default behaviour
 	this.testChainFail = function(test){
 		var p = new Promisse();
