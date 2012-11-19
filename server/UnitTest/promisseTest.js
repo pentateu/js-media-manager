@@ -102,6 +102,8 @@ var PromisseTest = module.exports = new UnitTest(function(){
 
 		child1.resolve('first result');
 		child2.resolve('second result');
+		
+		p.resolve();
 	};
 
 	this.testChain_DoneCalledOutOfOrder = function(test){
@@ -128,6 +130,8 @@ var PromisseTest = module.exports = new UnitTest(function(){
 		p.chain(child1);
 		p.chain(child2);
 		child2.resolve('second result');
+		
+		p.resolve();
 	};
 
 	//Test Scenario 4 - chaining multiple promisse objects and failing one child with default behaviour
@@ -156,6 +160,8 @@ var PromisseTest = module.exports = new UnitTest(function(){
 		child1.resolve('first result');
 		child2.resolve('second result');
 		child3.reject('some error');
+		
+		p.resolve();
 	};
 
 	//Test Scenario 5 - chaining multiple promisse objects and failing one child with behaviour set to 
@@ -190,6 +196,8 @@ var PromisseTest = module.exports = new UnitTest(function(){
 		child2.resolve('second result');
 		child3.reject('some error');
 		child4.resolve('forth result');
+		
+		p.resolve();
 	};
 
 	this.testChainFailPassAnyOnConstructor = function(test){
@@ -220,7 +228,8 @@ var PromisseTest = module.exports = new UnitTest(function(){
 		child2.resolve('second result');
 		child3.reject('some error');
 		child4.resolve('forth result');
-
+		
+		p.resolve();
 	};
 
 	//Test Scenario 7 - chaining with filter
@@ -247,6 +256,8 @@ var PromisseTest = module.exports = new UnitTest(function(){
 
 		child1.resolve('first result');
 		child2.resolve('second result');
+		
+		p.resolve();
 	};
 
 });//end of UnitTest

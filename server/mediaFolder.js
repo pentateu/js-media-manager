@@ -135,13 +135,10 @@ var MediaFolder = function(folderInfo) {
 
 	this.addSubFolderFiles = function(folders){
 		var p = new Promisse();
-
 		if(folders.size() == 0){
 			//Util.debug('addSubFolderFiles() no sub folders to add');
 			//no folders to process
-			setTimeout(function(){//make sure it is async
-				p.resolve();
-			}, 1);
+			p.resolve();
 			return p;
 		}
 
@@ -151,101 +148,90 @@ var MediaFolder = function(folderInfo) {
 			it.next();
 		},
 		function(){
-			//Util.debug('all sub folders added for path:' + path);
-			var psub = new Promisse();
 			//update all sub folders
 			subFolders.iterate(function(it, item){
 				//Util.debug('updating subfolder path:' + item.path);
-				psub.chain(item.update());
+				p.chain(item.update());
 				it.next();
 			},
 			function(){
-				//Util.debug('all subfolders.update called() path:' + path);
-				psub.done(function(){
-					//Util.debug('all sub folders updated for path:' + path);
-					p.resolve();
-				})
-				.fail(function(err){
-					p.reject(err);
-				});
-			});			
+				p.resolve();
+			});
 		});
 		return p;
 	};
 
 	this.reconcile = function(allFiles){
 		var p = new Promisse();
-		setTimeout(function(){//make sure it is async
+		
 
-			if(allFiles.size() == 0){
-				//Util.debug('reconcile() no files/folders to reconcile');
-				p.resolve();
-				return p;
-			}
-
-			var mediaFilesNotFound = Util.asCollection(new Array());
-			var subFoldersNotFound = Util.asCollection(new Array());
-
-			//go through all mediaFiles and check which ones no longer exists
-			mediaFileList.forEach(function(mediaFileItem, idx){
-				var found = false;
-				allFiles.forEach(function(fileItem){
-					if(mediaFileItem.fileName === fileItem){
-						found = true;
-						return false;//stop for each
-					}
-				});
-				if( ! found){
-					mediaFilesNotFound.add({mediaFile:mediaFileItem, index:idx});
-				}
-			});
-
-			//go through all subfolders and check which ones no longer exists
-			subFolders.forEach(function(subFolderItem, idx){
-				var found = false;
-				allFiles.forEach(function(fileItem){
-					var itemFullPath = pathLib.resolve(path, fileItem);
-
-					if(subFolderItem.path === itemFullPath){
-						found = true;
-						return false;//stop for each
-					}
-				});
-				if( ! found){
-					subFoldersNotFound.add({subFolder:subFolderItem, index:idx});
-				}
-			});
-
-			//reconcile media files
-			var diff = 0;
-			mediaFilesNotFound.forEach(function(item){
-				var mediaFile = item.mediaFile;
-				var idx = item.index;
-
-				//remove form local list
-				mediaFileList.splice((idx - diff), 1);
-				diff++;
-
-				//TODO:Set he mediaFile as invalid, si nce the file no longer exists
-			});
-
-			diff = 0;
-			//reconcile sub folders
-			subFoldersNotFound.forEach(function(item){
-				var subFolder = item.subFolder;
-				var idx = item.index;
-
-				//remove from local list
-				subFolders.splice((idx - diff), 1);
-				diff++;
-
-				//remove subfolder form cache
-				removeFromCache(subFolder.path);
-			});
-
+		if(allFiles.size() == 0){
+			//Util.debug('reconcile() no files/folders to reconcile');
 			p.resolve();
+			return p;
+		}
 
-		}, 1);
+		var mediaFilesNotFound = Util.asCollection(new Array());
+		var subFoldersNotFound = Util.asCollection(new Array());
+
+		//go through all mediaFiles and check which ones no longer exists
+		mediaFileList.forEach(function(mediaFileItem, idx){
+			var found = false;
+			allFiles.forEach(function(fileItem){
+				if(mediaFileItem.fileName === fileItem){
+					found = true;
+					return false;//stop for each
+				}
+			});
+			if( ! found){
+				mediaFilesNotFound.add({mediaFile:mediaFileItem, index:idx});
+			}
+		});
+
+		//go through all subfolders and check which ones no longer exists
+		subFolders.forEach(function(subFolderItem, idx){
+			var found = false;
+			allFiles.forEach(function(fileItem){
+				var itemFullPath = pathLib.resolve(path, fileItem);
+
+				if(subFolderItem.path === itemFullPath){
+					found = true;
+					return false;//stop for each
+				}
+			});
+			if( ! found){
+				subFoldersNotFound.add({subFolder:subFolderItem, index:idx});
+			}
+		});
+
+		//reconcile media files
+		var diff = 0;
+		mediaFilesNotFound.forEach(function(item){
+			var mediaFile = item.mediaFile;
+			var idx = item.index;
+
+			//remove form local list
+			mediaFileList.splice((idx - diff), 1);
+			diff++;
+
+			//TODO:Set he mediaFile as invalid, si nce the file no longer exists
+		});
+
+		diff = 0;
+		//reconcile sub folders
+		subFoldersNotFound.forEach(function(item){
+			var subFolder = item.subFolder;
+			var idx = item.index;
+
+			//remove from local list
+			subFolders.splice((idx - diff), 1);
+			diff++;
+
+			//remove subfolder form cache
+			removeFromCache(subFolder.path);
+		});
+
+		p.resolve();
 
 		return p;
 	};
@@ -307,7 +293,9 @@ var MediaFolder = function(folderInfo) {
 		p.chain(mediaFolder.addSubFolderFiles(subFoldersFound));
 		//3: reconcile and remove items that no longer exists
 		p.chain(mediaFolder.reconcile(allFound));
-
+		
+		p.resolve();
+		
 		return p;
 	};
 

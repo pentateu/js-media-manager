@@ -28,7 +28,7 @@ var UnitTest = module.exports = function(unitTest) {
 
 	var p = new Promisse();
 
-	var getPromisse = this.getPromisse = function(){
+	this.getPromisse = function(){
 		return p;
 	};
 
@@ -118,7 +118,7 @@ var UnitTest = module.exports = function(unitTest) {
 
 			fail:function(desc){
 				cleanRun = false;
-				console.log('(FAIL) XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
+				console.log('(FAIL) - ' + testFunc + ' XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
 				console.trace('--> ' +  desc);
 				//console.trace(
 			},

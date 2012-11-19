@@ -21,7 +21,7 @@ function listAll(){
 	var mediaList = new Array();
 	Util.asCollection(mediaList);
 
-	var myPromisse = new Promisse().filterChain(function(results){
+	var p = new Promisse().filterChain(function(results){
 		return mediaList;//return the mediaList
 	});
 
@@ -31,9 +31,10 @@ function listAll(){
 
 		var mediaFolder = new MediaFolder(folderInfo);
 
-		myPromisse.chain(mediaFolder.scan(mediaList));
+		p.chain(mediaFolder.scan(mediaList));
 	}
-	return myPromisse;
+	p.resolve();
+	return p;
 }
 
 exports.listAll = listAll;

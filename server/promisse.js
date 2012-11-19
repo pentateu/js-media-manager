@@ -22,8 +22,8 @@ var Promisse = module.exports = function(options) {
 	var doneHandlers = new Array();
 	var failHandlers = new Array();
 
-	var chainCounter = 0;
 	var chainArgsArray = new Array();
+	var chainList = Util.asCollection(new Array());
 	var chainErrors = new Array();
 	
 	//passAny : even if there is a failed chained promisse it will still call
@@ -73,18 +73,22 @@ var Promisse = module.exports = function(options) {
 
 	//resolve the promisse
 	this.resolve = function(){
-		args = arguments;
-		if(instance.state === PENDING){
-			instance.state = RESOLVED;
-			//call the doneHandlers
-			for (var i = 0; i < doneHandlers.length; i++) {
-				doneHandlers[i].apply(instance, args);
-			};
-
+		if(chainList.size() > 0){
+			resolveChain();
+		}
+		else{
+			args = arguments;
+			if(instance.state === PENDING){
+				instance.state = RESOLVED;
+				//call the doneHandlers
+				for (var i = 0; i < doneHandlers.length; i++) {
+					doneHandlers[i].apply(instance, args);
+				};
+			}
 		}
 		return instance;
 	};
-
+	
 	//reject the promisse
 	this.reject = function(){
 		args = arguments;
@@ -103,59 +107,55 @@ var Promisse = module.exports = function(options) {
 		filterChainFunc = func;
 		return instance;
 	};
-
+	
 	function resolveChain(){
-		//console.log('chainBehaviour is: ' + chainBehaviour);
-		if(chainErrors.length > 0 && chainBehaviour === "failAll"){
-			//when at least one error has occurred and the behaviour is failAll
-			instance.reject.call(instance, chainErrors);
-		}
-		else{
-			//when all chainned promisses has been finished, completes this promisse
-
-			if(filterChainFunc){
-				//console.log(' *** invoking a filterChain *** ');
-				instance.resolve.call(instance, filterChainFunc(chainArgsArray));
+		
+		function chainResolved(){
+			//console.log('chainBehaviour is: ' + chainBehaviour);
+			if(chainErrors.length > 0 && chainBehaviour === "failAll"){
+				//when at least one error has occurred and the behaviour is failAll
+				instance.reject.call(instance, chainErrors);
 			}
 			else{
-				instance.resolve.call(instance, chainArgsArray);
+				//when all chainned promisses has been finished, completes this promisse
+				//reset the chain
+				chainList = Util.asCollection(new Array());
+				
+				if(filterChainFunc){
+					//console.log(' *** invoking a filterChain *** ');
+					instance.resolve.call(instance, filterChainFunc(chainArgsArray));
+				}
+				else{
+					instance.resolve.call(instance, chainArgsArray);
+				}
 			}
 		}
-	}
+		
+		var count = 0;
+		chainList.forEach(function(anotherPromisse){
+			anotherPromisse.done(function(){
+				chainArgsArray.push(arguments);
+				//when any event happens in the other promisse
+				count++;
+				if(count === chainList.size()){
+					chainResolved();
+				}
+			})
+			.fail(function(err){
+				chainErrors.push(err);
+				//when any event happes in the other promisse
+				count++;
+				if(count === chainList.size()){
+					chainResolved();
+				}
+			});
+		});
+	};
 
 	//chain another promisse
 	this.chain = function(anotherPromisse){
 		if(instance.state === PENDING){ //can only chain promisses when is still at a pending instance.state
-
-			//check if the other promisse is still pending
-			if(anotherPromisse.state === PENDING){
-				chainCounter++;
-				anotherPromisse.done(function(){
-					chainArgsArray.push(arguments);
-					//when any event happens in the other promisse
-					chainCounter--;
-					if(chainCounter === 0){
-						resolveChain();
-					}
-				})
-				.fail(function(err){
-					chainErrors.push(err);
-					//when any event happes in the other promisse
-					chainCounter--;
-					if(chainCounter === 0){
-						resolveChain();
-					}
-				});
-			}
-			else{
-				//Util.debug("[Promisse] adding a promisse that is not pending: " + anotherPromisse.state);
-				anotherPromisse.done(function(){
-					chainArgsArray.push(arguments);
-				})
-				.fail(function(err){
-					chainErrors.push(err);
-				});
-			}
+			chainList.add(anotherPromisse);
 		}
 		else{
 			Util.debug("[Promisse] (WARNING) cannot chain any more primisses, state is now: " + instance.state);

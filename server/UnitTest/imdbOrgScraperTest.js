@@ -20,7 +20,7 @@ var ImdbOrgScraperTest = module.exports = new UnitTest(function(){
 	//test scraping on IMDB
 	this.testIMDBSearch_ExactMatch = function(test){
 		//set the a higher timeout since this will connect to the internet to the imdb website
-		test.newTimeOut(2 * 1000);//5 seconds
+		test.newTimeOut(5 * 1000);//5 seconds
 
 		var fileName = 'Surfer Dude DVDRip.avi';
 		var mediaFile = new MediaFile(fileName, comedyFolder);
