@@ -116,6 +116,31 @@ var UtilTest = module.exports = new UnitTest(function(){
 		});
 	};
 	
+	this.testGetValue = function(test){
+		var mockMediaFile = {
+			path:'path/value',
+			info:{
+				title:'title value',
+				imdb:{
+					imdb_id:'tti4354543'
+				}
+			}};
+		
+		var value = Util.getValue('path', mockMediaFile);
+		test.assertEqual(value, 'path/value');
+		Util.debug(value);
+		
+		value = Util.getValue('info.title', mockMediaFile);
+		test.assertEqual(value, 'title value');
+		Util.debug(value);
+		
+		value = Util.getValue('info.imdb.imdb_id', mockMediaFile);
+		test.assertEqual(value, 'tti4354543');
+		Util.debug(value);
+		
+		test.end();
+	};
+	
 });
 
 UtilTest.setup(module);

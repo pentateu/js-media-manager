@@ -325,15 +325,21 @@ var UnitTest = module.exports = function(unitTest) {
 
 		//timer that watch for tests that forget to call the end() function
 		var endCheckerTimer = setTimeout(cancelRunnintTestCase, TEST_TIMEOUT);
-
-		try{
+		
+		if(unitTest.stopAtError){
 			//invoke the function passing the testContext
 			unitTest[testFunc].call(testContext, testContext);
 		}
-		catch(err){
-			cleanRun = false;
-			testContext.fail('Error: ' + err);
-			testContext.end();
+		else{
+			try{
+				//invoke the function passing the testContext
+				unitTest[testFunc].call(testContext, testContext);
+			}
+			catch(err){
+				cleanRun = false;
+				testContext.fail('Error: ' + err);
+				testContext.end();
+			}
 		}
 	}
 

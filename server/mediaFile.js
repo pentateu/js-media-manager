@@ -7,9 +7,9 @@ var Util 			= require('./util');
 var MediaScraper 	= require("./mediaScraper");
 
 var ImgDownloader	 = require('./imgDownloader');
-
-//local vars
-var mediaInfoCache = {};
+var MediaStore		= require('./mediaStore');
+var events 			= require("events");
+var EventEmitter 	= events.EventEmitter;
 
 var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 	//make sure it behaves as a constructor
@@ -29,6 +29,11 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 		ext = getExt(fileName);
 	}
 
+	//setup EventEmmiter
+	EventEmitter.call(this);
+	
+	var mediaFile = this;
+	
 	//constructor
 	this.mediaFolder = mediaFolder;
 	this.fileName = fileName;
@@ -43,26 +48,31 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 
 	//Info state:
 	//0 : Don't exist
-	//1 : now saved
+	//1 : not saved / changed
 	//2 : saved
 	var infoState = 0;
 
 	//getter and setters
-	this.__defineGetter__("info", function(){return info});
+	this.__defineGetter__("info", function(){return info;});
 	this.__defineSetter__("info", function(newInfo){
 		//console.log('info set in mediaFile.');
         info = newInfo;
         infoState = 1;
+        
+        mediaFolder.emit(MediaFile.INFO_LOADED_EVENT, newInfo);
     });
+	
+	//dynamic/calculated property
+	this.__defineGetter__("path", function(){
+		return pathLib.resolve(mediaFolder.path, mediaFolder.fileName);
+	});
 
 	//save the info for this Media File
 	this.save = function(){
 		var p = new Promisse();
 
 		if(infoState === 1){
-			
-			var infoFilePath = this.getInfoFilePath();
-
+			var infoFilePath = mediaFile.getInfoFilePath();
 			//save the info to the disk
 			fs.writeFile(infoFilePath, JSON.stringify(info), function (err) {
 		  		if (err) {
@@ -74,8 +84,8 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 		  			});
 		  		}
 		  		else{
-		  			//console.log('info file saved on: ' + infoFilePath);
 		  			p.resolve();//info saved succesfully
+		  			mediaFolder.emit(MediaFile.SAVED_EVENT, mediaFile);
 		  		}
 			});
 		}
@@ -86,35 +96,28 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 		//infoFileName
 		var infoFileName = fileName.replace('.' + ext, '.info');
 		//path for info file
-		var path = pathLib.resolve(mediaFolder.path, infoFileName);
-		return path;
+		return pathLib.resolve(mediaFolder.path, infoFileName);
 	};
 
 	this.getPosterFilePath = function(imgExt){
 		//infoFileName
 		var imgFileName = fileName.replace('.' + ext, '.' + imgExt);
 		//path for info file
-		var path = pathLib.resolve(mediaFolder.path, imgFileName);
-		return path;
+		return pathLib.resolve(mediaFolder.path, imgFileName);
 	};
 
-	var loadInfoFile = this.loadInfoFile = function(){
+	this.loadInfoFile = function(){
 		var p = new Promisse();
-
-		var path = this.getInfoFilePath(fileName, mediaFolder, ext);
-
-		//open file
-		fs.readFile(path, function(err, data){
+		//open info file
+		fs.readFile(mediaFile.getInfoFilePath(), function(err, data){
 			//check for errors
 			if (err){
 				p.reject(MediaFile.ERROR_INFO_CANT_OPEN.setCause(err));
 				return p;
 			}
-
-			var info = null;
 			//try to parse the content
 			try{
-				info = JSON.parse(data);
+				mediaFile.info = JSON.parse(data);
 				p.resolve(info);
 			}
 			catch(err){
@@ -169,7 +172,8 @@ var get = MediaFile.get = function(fileName, mediaFolder, stats){
 
 //load the Media File details from the file system
 var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFolder, ext, stats){
-	var mediaFile = mediaInfoCache[path];
+	//search for the mediaFile instance from the store
+	var mediaFile = MediaStore.getByPath(path); // mediaInfoCache[path];
 
 	var myPromisse = new Promisse();
 
@@ -180,9 +184,9 @@ var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFold
 		//create a mediaFile instance
 		mediaFile = new MediaFile(fileName, mediaFolder, ext);
 
-		//add to the cache
-		mediaInfoCache[path] = mediaFile;
-
+		//add to the store
+		MediaStore.add(mediaFile);
+		
 		function infoLoaded(){
 			var imgExt = 'jpg';
 			var posterImgPath = mediaFile.getPosterFilePath(imgExt);
@@ -220,8 +224,6 @@ var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFold
 		mediaFile.loadInfoFile()
 			.done(function(info){
 				//Condition 1: info loaded (unit tested !)
-				mediaFile.info = info;
-				//myPromisse.resolve(mediaFile);
 				infoLoaded();
 			})
 			.fail(function(err){
@@ -311,12 +313,11 @@ mediaTitleCleanUp.add(new CleanUp({
 	replacement:''
 }));
 
-MediaFile.capitalize = function(str)
-{
+MediaFile.capitalize = function(str){
     return str.replace(/\w\S*/g, function(txt){
     	return txt.charAt(0).toUpperCase() + txt.substr(1);
     });
-}
+};
 
 //return the media title clean for a given media file
 MediaFile.cleanTitle = function(title){
@@ -358,7 +359,13 @@ MediaFile.getYear = function(fileName){
 	}
 };
 
+Util.inherits(MediaFile, EventEmitter);
+
 //constants
+//events
+MediaFile.INFO_LOADED_EVENT	= "infoLoaded";
+MediaFile.SAVED_EVENT		= "mediaFileSaved";
+
 //error codes
 MediaFile.ERROR_INFO_CANT_OPEN 			= Util.exception({message:"Can't Open Info file."});
 MediaFile.ERROR_INFO_CANT_PARSE 		= Util.exception({message:"Can't Parse Info file."});

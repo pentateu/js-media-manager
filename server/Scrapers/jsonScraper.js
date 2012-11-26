@@ -69,7 +69,7 @@ var JSONScraper = module.exports = function(ScraperImpl) {
 		var url = scraperInstance.buildURL(query);
 		console.log('jsonScraper search with url: ' + url);
 
-		//query iMDB
+		//query service
 		http.get(url, function(res) {
 			console.log('STATUS: ' + res.statusCode);
 		  	//console.log('HEADERS: ' + JSON.stringify(res.headers));
@@ -129,7 +129,7 @@ var JSONScraper = module.exports = function(ScraperImpl) {
 		return p;
 	};
 
-	//create scraper instance
+	//create scraper instance - after the super methods are defined
 	var scraperInstance = new ScraperImpl(context);
 };
 

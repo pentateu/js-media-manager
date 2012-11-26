@@ -33,6 +33,8 @@ var Util = function() {
 	this.warn = nodeUtil.debug;
 	this.debug = nodeUtil.debug;
 	this.error = nodeUtil.error;
+	
+	this.isArray = nodeUtil.isArray;
 
 	this.validateParameter = function(parameterValue, validValues, parameterName){
 
@@ -123,7 +125,25 @@ var Util = function() {
 		};
 		return array;
 	};
+	
+	this.getValue = function(propertyPath, obj){
+		if(!propertyPath || typeof(propertyPath) != 'string' || propertyPath.length == 0){
+			throw ERROR_INVALID_PROPERTY_PATH;
+		}
+		//split the property parts
+		var props = propertyPath.split('.');
+		utilInstance.asCollection(props);
+		
+		var cv = obj;//current value
+		props.forEach(function(item){
+			cv = cv[item];
+		});
+		return cv;
+	};
 };
 
 //export a singleton of the Util object
-module.exports = new Util();
+var utilInstance = module.exports = new Util();
+
+Util.ERROR_INVALID_PROPERTY_PATH = utilInstance.exception({message:"Invalid property path."});
+

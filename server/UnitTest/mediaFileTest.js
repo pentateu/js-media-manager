@@ -26,7 +26,6 @@ var MediaFileTest = module.exports = new UnitTest(function(){
 
 		//create info file
 		fs.writeFileSync(infoPath, JSON.stringify({
-			"title" : "The Expendables 2",
 			"watched" : "false",
 			"imdb" : {
 				"title" : "The Expendables 2",
@@ -51,7 +50,7 @@ var MediaFileTest = module.exports = new UnitTest(function(){
 
 				test.assertNotNull(info.imdb, 'media file with imdb metadata');
 
-				test.assertEqual(info.title, 'The Expendables 2', 'proper imdb title');
+				test.assertEqual(info.imdb.title, 'The Expendables 2', 'proper imdb title');
 
 				test.assertEqual(info.watched, "false", 'watched false');
 
@@ -78,7 +77,6 @@ var MediaFileTest = module.exports = new UnitTest(function(){
 
 		//set the info 
 		mediaFile.info = {
-			"title" : "The Campaign",
 			"watched" : "false",
 			"imdb" : {
 				"title" : "The Campaign",
@@ -93,8 +91,8 @@ var MediaFileTest = module.exports = new UnitTest(function(){
 				//check that the file has been saved
 				try{
 					var savedInfo = JSON.parse(fs.readFileSync(infoPath));
-					
-					test.assertEqual(savedInfo.title, "The Campaign", 'same title');
+					//
+					test.assertEqual(savedInfo.imdb.title, "The Campaign", 'same title');
 					test.assertEqual(savedInfo.watched, "false", 'watched is false');
 					test.assertNotNull(savedInfo.imdb, 'imdb not null');
 					test.assertEqual(savedInfo.imdb.year, "2012", 'same year');
@@ -181,7 +179,6 @@ var MediaFileTest = module.exports = new UnitTest(function(){
 					//console.log(' *** (Stub) Running MediaScraper.scrape() stub. ***');
 					var p = new Promisse();
 					p.resolve({
-						"title" : "The Campaign",
 						"watched" : "false",
 						"imdb" : {
 							"title" : "The Campaign",
@@ -246,7 +243,6 @@ var MediaFileTest = module.exports = new UnitTest(function(){
 					//console.log('(Mock Scraper) - ');
 					var p = new Promisse();
 					p.resolve({
-						"title" : "The Campaign",
 						"watched" : "false",
 						"imdb" : {
 							"title" : "The Campaign",

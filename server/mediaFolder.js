@@ -90,7 +90,6 @@ var MediaFolder = function(folderInfo) {
 	});
 
 	function setState(newState){
-		////Util.debug('setState - this: ' + Util.inspect(mediaFolder));
 		state = newState;
 		mediaFolder.emit(STATE_CHANGE_EVENT, newState);
 	}
@@ -100,17 +99,16 @@ var MediaFolder = function(folderInfo) {
 		var p = new Promisse();
 
 		if(files.size() == 0){
-			//Util.debug('addFiles() no files to add');
 			//no folders to process
-			setTimeout(function(){//make sure it is async
-				p.resolve();
-			}, 1);
+			p.resolve();
 			return p;
 		}
-
+		//list of files added, it is used to pass in the event as a parameter
 		var mediaFilesAdded = Util.asCollection(new Array());
+		
+		//go through each of the files to be added
 		files.iterate(function(it, item){
-			////Util.debug('addFiles() file: ' + item.fileName);
+			//ask the MediaFile object to get the details
 			MediaFile.get(item.fileName, mediaFolder, item.stats)
 				.done(function(mediaFile){
 					//add the media file to the media list

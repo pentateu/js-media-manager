@@ -20,7 +20,7 @@ var ImdbOrgScraperTest = module.exports = new UnitTest(function(){
 	//test scraping on IMDB
 	this.testIMDBSearch_ExactMatch = function(test){
 		//set the a higher timeout since this will connect to the internet to the imdb website
-		test.newTimeOut(5 * 1000);//5 seconds
+		test.newTimeOut(10 * 1000);//5 seconds
 
 		var fileName = 'Surfer Dude DVDRip.avi';
 		var mediaFile = new MediaFile(fileName, comedyFolder);
@@ -45,7 +45,7 @@ var ImdbOrgScraperTest = module.exports = new UnitTest(function(){
 
 	this.testIMDBSearch_2Matches = function(test){
 		//set the a higher timeout since this will connect to the internet to the imdb website
-		test.newTimeOut(2 * 1000);//5 seconds
+		test.newTimeOut(5 * 1000);//5 seconds
 
 		var fileName = 'The Expendables 2.mkv';
 		var mediaFile = new MediaFile(fileName, comedyFolder);
@@ -73,7 +73,7 @@ var ImdbOrgScraperTest = module.exports = new UnitTest(function(){
 
 	this.testIMDBSearch_02 = function(test){
 		//set the a higher timeout since this will connect to the internet to the imdb website
-		test.newTimeOut(2 * 1000);//2 seconds
+		test.newTimeOut(5 * 1000);//2 seconds
 
 		var fileName = 'Brave (2012).mkv';
 		var mediaFile = new MediaFile(fileName, comedyFolder);
