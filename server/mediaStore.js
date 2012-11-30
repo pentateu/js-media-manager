@@ -1,4 +1,6 @@
-var JSii = require('./jsii/JSii');	
+var JSii = require('./jsii/JSii');
+var util = require("./util");
+var MediaFile = require('./mediaFile');
 
 //MediaStore object is hidden and not exposed to outside the module
 var MediaStore = function() {
@@ -25,6 +27,12 @@ var MediaStore = function() {
 	this.add = function(mediaFile){
 		index.feedDocs([mediaFile]);
 		storeByPath[mediaFile.path] = mediaFile;
+
+		//register an event , so when the mediaFile changes its properties the index is updated
+		mediaFile.on(MediaFile.CHANGED_EVENT, function(mediaFile, changes){	
+			index.feedDocs([mediaFile]);
+		});	
+
 		return mediaFile;
 	};
 	

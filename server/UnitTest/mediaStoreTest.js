@@ -1,16 +1,16 @@
 var UnitTest = require('./unitTest');
 
-var MediaStore = require('../mediaStore');
+var mediaStore = require('../mediaStore');
 
 var JSii = require('../jsii/JSii');	
 
-var MediaStoreTest = module.exports = new UnitTest(function(){
+var mediaStoreTest = module.exports = new UnitTest(function(){
 	
 	this.stopAtError = true;
 	
 	
 	//add an item to the store
-	MediaStore.add({
+	mediaStore.add({
 		title:'The Expendables',
 		year:2012,
 		path:'/path/Expendables.mkv',
@@ -22,7 +22,7 @@ var MediaStoreTest = module.exports = new UnitTest(function(){
 			}
 		}
 	});
-	MediaStore.add({
+	mediaStore.add({
 		title:'The Expendables 2',
 		year:2012,
 		path:'/path/Expendables2.mkv',
@@ -34,7 +34,7 @@ var MediaStoreTest = module.exports = new UnitTest(function(){
 			}
 		}
 	});
-	MediaStore.add({
+	mediaStore.add({
 		title:'Rock 5',
 		year:2012,
 		path:'/path/Rock5.mkv',
@@ -70,11 +70,11 @@ var MediaStoreTest = module.exports = new UnitTest(function(){
 	
 	this.testSearchByTitle = function(test){
 		//search item from the store
-		var result = MediaStore.search('Expendables');
+		var result = mediaStore.search('Expendables');
 		test.assertEqual(result.total, 2, 'two items returned');
 		test.assertEqual(result.docs.length, 2, 'two item sreturned');
 		
-		result = MediaStore.search('rock');
+		result = mediaStore.search('rock');
 		test.assertEqual(result.total, 1, 'one item returned');
 		test.assertEqual(result.docs.length, 1, 'one item returned');
 		
@@ -83,10 +83,10 @@ var MediaStoreTest = module.exports = new UnitTest(function(){
 	
 	this.testSearchByYear = function(test){
 		
-		MediaStore.clear();
+		mediaStore.clear();
 		
 		//add an item to the store
-		MediaStore.add({
+		mediaStore.add({
 			title:'The Expendables',
 			year:2011,
 			info:{
@@ -97,7 +97,7 @@ var MediaStoreTest = module.exports = new UnitTest(function(){
 				}
 			}
 		});
-		MediaStore.add({
+		mediaStore.add({
 			title:'The Expendables 2',
 			year:2012,
 			info:{
@@ -108,7 +108,7 @@ var MediaStoreTest = module.exports = new UnitTest(function(){
 				}
 			}
 		});
-		MediaStore.add({
+		mediaStore.add({
 			title:'Rock 5',
 			year:2010,
 			info:{
@@ -121,15 +121,19 @@ var MediaStoreTest = module.exports = new UnitTest(function(){
 		});
 		
 		//search item from the store
-		var result = MediaStore.search('year:2010');
+		var result = mediaStore.search('year:2010');
 		test.assertEqual(result.total, 1, 'one item returned');
 		test.assertEqual(result.docs.length, 1, 'one item returned');
 		test.assertEqual(result.docs[0].title, 'Rock 5', 'title match');
 		
-		result = MediaStore.search('year:2011');
+		result = mediaStore.search('year:2011');
 		test.assertEqual(result.total, 1, 'one item returned');
 		test.assertEqual(result.docs.length, 1, 'one item returned');
 		test.assertEqual(result.docs[0].title, 'The Expendables', 'title match');
+		
+		result = mediaStore.search('*');
+		test.assertEqual(result.total, 3, '3 item(s) returned');
+		test.assertEqual(result.docs.length, 3, '3 item(s) returned');
 		
 		test.end();
 	};
@@ -137,4 +141,4 @@ var MediaStoreTest = module.exports = new UnitTest(function(){
 	
 });
 
-MediaStoreTest.setup(module);
+mediaStoreTest.setup(module);

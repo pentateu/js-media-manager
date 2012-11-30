@@ -2,20 +2,36 @@ var nodeUtil = require("util");
 
 //Definition of the Exception object
 var Exception = function(options){
-	this.code 		= null;
-	this.message 	= null;
-	this.cause 		= null;
+	
+	var causeErr = null;
 
-	if(options){
-		this.code 		= options.code;
-		this.message 	= options.message;
-		this.cause 		= options.cause;
-	}
-
-	this.setCause = function(val){
-		this.cause = val;
+	this.cause = function(val){
+		causeErr = val;
 		return this;
 	};
+
+	var moreInfo = [];
+	this.add = function(info){
+		moreInfo.push(info);
+	};
+
+	this.error = function(){
+		//creates an Error object
+		var error = new Error();
+
+		if(options){
+			error.code 		= options.code;
+			error.message 	= options.message;
+		}
+		if(causeErr){
+			error.cause 	= causeErr;
+		}
+		if(moreInfo){
+			error.moreInfo 	= moreInfo;
+		}
+		return error;
+	};
+
 	return this;
 };
 
@@ -66,7 +82,12 @@ var Util = function() {
 
 	//extend the object with collection methods
 	//forEach, iterate and etc
-	this.asCollection = function(array){
+	this.collection = function(array){
+		//check/validate for a valid array
+		if(! nodeUtil.isArray(array)){
+			throw "[util.collection] Not a valid array object!";
+		}
+
 		//add a mediaInfo to the list
 		array.add = function(item){
 			array.push(item);
@@ -77,18 +98,28 @@ var Util = function() {
 			return array.length;
 		};
 
+		array.copy = function(other, handler){
+			util.collection(other);
+			other.forEach(function(item){
+				if(handler){
+					item = handler.call(item, item);
+				}
+				array.add(item);
+			});
+		};
+
 		//for each
 		array.forEach = function(fn) {
 			for (var i = 0; i < array.length; i++) {
 				var item = array[i];
 				if (fn(item, i) === false) {
-					//stop the loop
 					break;
 				}
 			}
 		};
 
 		array.iterate = function(fn, endFn){
+					//stop the loop
 			var idx = 0;
 			var item = array[idx];
 			
@@ -125,6 +156,7 @@ var Util = function() {
 		};
 		return array;
 	};
+	this.asCollection = this.collection;
 	
 	this.getValue = function(propertyPath, obj){
 		if(!propertyPath || typeof(propertyPath) != 'string' || propertyPath.length == 0){
@@ -132,7 +164,7 @@ var Util = function() {
 		}
 		//split the property parts
 		var props = propertyPath.split('.');
-		utilInstance.asCollection(props);
+		util.asCollection(props);
 		
 		var cv = obj;//current value
 		props.forEach(function(item){
@@ -143,7 +175,7 @@ var Util = function() {
 };
 
 //export a singleton of the Util object
-var utilInstance = module.exports = new Util();
+var util = module.exports = new Util();
 
-Util.ERROR_INVALID_PROPERTY_PATH = utilInstance.exception({message:"Invalid property path."});
+Util.ERROR_INVALID_PROPERTY_PATH = util.exception({message:"Invalid property path."});
 

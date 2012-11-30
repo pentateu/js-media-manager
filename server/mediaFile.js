@@ -3,11 +3,11 @@ var fs	 	= require('fs');
 var pathLib = require('path');
 
 var Promisse 		= require("./promisse");
-var Util 			= require('./util');
+var util 			= require('./util');
 var MediaScraper 	= require("./mediaScraper");
 
-var ImgDownloader	 = require('./imgDownloader');
-var MediaStore		= require('./mediaStore');
+var ImgDownloader	= require('./imgDownloader');
+var mediaStore		= require('./mediaStore');
 var events 			= require("events");
 var EventEmitter 	= events.EventEmitter;
 
@@ -35,12 +35,12 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 	var mediaFile = this;
 	
 	//constructor
-	this.mediaFolder = mediaFolder;
-	this.fileName = fileName;
+	mediaFile.mediaFolder = mediaFolder;
+	mediaFile.fileName = fileName;
 	//title
-	this.title = MediaFile.cleanTitle(fileName);
-	this.year = MediaFile.getYear(fileName);
-	this.extension = ext;
+	mediaFile.title = MediaFile.cleanTitle(fileName);
+	mediaFile.year = MediaFile.getYear(fileName);
+	mediaFile.extension = ext;
 
 	//private vars
 	//info object for this media file
@@ -55,11 +55,28 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 	//getter and setters
 	this.__defineGetter__("info", function(){return info;});
 	this.__defineSetter__("info", function(newInfo){
-		//console.log('info set in mediaFile.');
+		var changes = {};
+        changes.size = 0;
+
         info = newInfo;
         infoState = 1;
-        
-        mediaFolder.emit(MediaFile.INFO_LOADED_EVENT, newInfo);
+
+        changes.info = info;
+        changes.size += 1;
+
+        mediaFile.emit(MediaFile.INFO_LOADED_EVENT, newInfo);
+
+        //copy the year information from the info
+        if(info.imdb && info.imdb.year){
+        	 mediaFile.year = info.imdb.year;
+        	 changes.year = mediaFile.year;
+        	 changes.size += 1;
+        }
+
+        //if(changes.size > 0){
+       	//fire the changed event
+       	mediaFile.emit(MediaFile.CHANGED_EVENT, mediaFile, changes);
+        //}
     });
 	
 	//dynamic/calculated property
@@ -76,16 +93,15 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 			//save the info to the disk
 			fs.writeFile(infoFilePath, JSON.stringify(info), function (err) {
 		  		if (err) {
-		  			p.reject({
-		  				code:ERROR_SAVING_INFO, 
-		  				message:"problems trying to save info file.", 
-		  				cause:err, 
-		  				infoFilePath:infoFilePath
-		  			});
+		  			p.reject(
+		  				MediaFile.ERROR_SAVING_INFO
+		  					.cause(err)
+		  					.add({infoFilePath:infoFilePath})
+		  					.error());
 		  		}
 		  		else{
 		  			p.resolve();//info saved succesfully
-		  			mediaFolder.emit(MediaFile.SAVED_EVENT, mediaFile);
+		  			mediaFile.emit(MediaFile.SAVED_EVENT, mediaFile);
 		  		}
 			});
 		}
@@ -112,7 +128,7 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 		fs.readFile(mediaFile.getInfoFilePath(), function(err, data){
 			//check for errors
 			if (err){
-				p.reject(MediaFile.ERROR_INFO_CANT_OPEN.setCause(err));
+				p.reject(MediaFile.ERROR_INFO_CANT_OPEN.cause(err).error());
 				return p;
 			}
 			//try to parse the content
@@ -173,7 +189,7 @@ var get = MediaFile.get = function(fileName, mediaFolder, stats){
 //load the Media File details from the file system
 var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFolder, ext, stats){
 	//search for the mediaFile instance from the store
-	var mediaFile = MediaStore.getByPath(path); // mediaInfoCache[path];
+	var mediaFile = mediaStore.findByPath(path); // mediaInfoCache[path];
 
 	var myPromisse = new Promisse();
 
@@ -185,7 +201,7 @@ var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFold
 		mediaFile = new MediaFile(fileName, mediaFolder, ext);
 
 		//add to the store
-		MediaStore.add(mediaFile);
+		mediaStore.add(mediaFile);
 		
 		function infoLoaded(){
 			var imgExt = 'jpg';
@@ -281,7 +297,7 @@ var CleanUp = function(opt){
 };
 
 var mediaTitleCleanUp = MediaFile.mediaTitleCleanUp = new Array();
-Util.asCollection(mediaTitleCleanUp);
+util.asCollection(mediaTitleCleanUp);
 
 //Regular expression to clean-up the file extension
 mediaTitleCleanUp.add(new CleanUp({
@@ -359,18 +375,20 @@ MediaFile.getYear = function(fileName){
 	}
 };
 
-Util.inherits(MediaFile, EventEmitter);
+util.inherits(MediaFile, EventEmitter);
 
 //constants
 //events
 MediaFile.INFO_LOADED_EVENT	= "infoLoaded";
 MediaFile.SAVED_EVENT		= "mediaFileSaved";
+MediaFile.CHANGED_EVENT		= "mediaFileChanged";
+
 
 //error codes
-MediaFile.ERROR_INFO_CANT_OPEN 			= Util.exception({message:"Can't Open Info file."});
-MediaFile.ERROR_INFO_CANT_PARSE 		= Util.exception({message:"Can't Parse Info file."});
-MediaFile.ERROR_SAVING_INFO 			= Util.exception({message:"Can't Save Info file."});
-MediaFile.ERROR_FILENAME_REQUIRED 		= Util.exception({message:"fileName is required."});
-MediaFile.ERROR_MEDIAFOLDER_REQUIRED 	= Util.exception({message:"mediaFolder is required."});
+MediaFile.ERROR_INFO_CANT_OPEN 			= util.exception({message:"Can't Open Info file."});
+MediaFile.ERROR_INFO_CANT_PARSE 		= util.exception({message:"Can't Parse Info file."});
+MediaFile.ERROR_SAVING_INFO 			= util.exception({message:"Can't Save Info file."});
+MediaFile.ERROR_FILENAME_REQUIRED 		= util.exception({message:"fileName is required."});
+MediaFile.ERROR_MEDIAFOLDER_REQUIRED 	= util.exception({message:"mediaFolder is required."});
 
 

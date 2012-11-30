@@ -52,12 +52,12 @@ var MediaFolderTest = module.exports = new UnitTest(function(){
 		test.newTimeOut(2 * 1000);//2 seconds
 
 
-		var rootFolder 	= testConfig.baseTestMediaFolder + '/update_folder_test';
-		var mFile1 		= rootFolder + '/movie name.mkv';
-		var iFile1 		= rootFolder + '/movie name.info';
-		var subFolder1 	= rootFolder + '/sub01';
-		var mFile2 		= subFolder1 + '/movie2 name.mkv';
-		var iFile2 		= subFolder1 + '/movie2 name.info';
+		var rootFolder 	= pathLib.join(testConfig.baseTestMediaFolder, 'update_folder_test');
+		var mFile1 		= pathLib.join(rootFolder, 'movie name.mkv');
+		var iFile1 		= pathLib.join(rootFolder, 'movie name.info');
+		var subFolder1 	= pathLib.join(rootFolder, 'sub01');
+		var mFile2 		= pathLib.join(subFolder1, 'movie2 name.mkv');
+		var iFile2 		= pathLib.join(subFolder1, 'movie2 name.info');
 
 		//create a test folder and test files
 		test.tearDown([
@@ -136,12 +136,12 @@ var MediaFolderTest = module.exports = new UnitTest(function(){
 	this.testUpdate_addFilesFoders = function(test){
 		test.newTimeOut(2 * 1000);//2 seconds
 
-		var rootFolder 	= testConfig.baseTestMediaFolder + '/update_folder_test2';
-		var mFile1 		= rootFolder + '/movie name.mkv';
-		var iFile1 		= rootFolder + '/movie name.info';
-		var subFolder1 	= rootFolder + '/sub01';
-		var mFile2 		= subFolder1 + '/movie2 name.mkv';
-		var iFile2 		= subFolder1 + '/movie2 name.info';
+		var rootFolder 	= pathLib.join(testConfig.baseTestMediaFolder, 'update_folder_test2');
+		var mFile1 		= pathLib.join(rootFolder, 'movie name.mkv');
+		var iFile1 		= pathLib.join(rootFolder, 'movie name.info');
+		var subFolder1 	= pathLib.join(rootFolder, 'sub01');
+		var mFile2 		= pathLib.join(subFolder1, 'movie2 name.mkv');
+		var iFile2 		= pathLib.join(subFolder1, 'movie2 name.info');
 
 		//create a test folder and test files
 		test.tearDown([
@@ -191,7 +191,7 @@ var MediaFolderTest = module.exports = new UnitTest(function(){
 
 		var totalUpdateCalls = 0;
 		mediaFolder.on(MediaFolder.UPDATE_COMPLETE_EVENT, function(){
-			totalUpdateCalls++;
+			totalUpdateCalls += 1;
 		});
 
 		mediaFolder.once(MediaFolder.UPDATE_COMPLETE_EVENT, function(){
@@ -240,22 +240,22 @@ var MediaFolderTest = module.exports = new UnitTest(function(){
 	this.testUpdate_Reconcile = function(test){
 		test.newTimeOut(4 * 1000);//2 seconds
 
-		var rootFolder 	= testConfig.baseTestMediaFolder + '/update_folder_test3';
-		var mFile1 		= rootFolder + '/movie name.mkv';
-		var iFile1 		= rootFolder + '/movie name.info';
+		var rootFolder 	= pathLib.join(testConfig.baseTestMediaFolder, 'update_folder_test3');
+		var mFile1 		= pathLib.join(rootFolder, 'movie name.mkv');
+		var iFile1 		= pathLib.join(rootFolder, 'movie name.info');
 
-		var mFile3 		= rootFolder + '/movie3 name.mkv';
-		var iFile3 		= rootFolder + '/movie3 name.info';
+		var mFile3 		= pathLib.join(rootFolder, 'movie3 name.mkv');
+		var iFile3 		= pathLib.join(rootFolder, 'movie3 name.info');
 
-		var mFile4 		= rootFolder + '/movie4 name.mkv';
-		var iFile4 		= rootFolder + '/movie4 name.info';
+		var mFile4 		= pathLib.join(rootFolder, 'movie4 name.mkv');
+		var iFile4 		= pathLib.join(rootFolder, 'movie4 name.info');
 
-		var mFile5 		= rootFolder + '/movie5 name.mkv';
-		var iFile5 		= rootFolder + '/movie5 name.info';
+		var mFile5 		= pathLib.join(rootFolder, 'movie5 name.mkv');
+		var iFile5 		= pathLib.join(rootFolder, 'movie5 name.info');
 
-		var subFolder1 	= rootFolder + '/sub01';
-		var mFile2 		= subFolder1 + '/movie2 name.mkv';
-		var iFile2 		= subFolder1 + '/movie2 name.info';
+		var subFolder1 	= pathLib.join(rootFolder, 'sub01');
+		var mFile2 		= pathLib.join(subFolder1, 'movie2 name.mkv');
+		var iFile2 		= pathLib.join(subFolder1, 'movie2 name.info');
 
 		//create a test folder and test files
 		test.tearDown([
@@ -381,7 +381,7 @@ var MediaFolderTest = module.exports = new UnitTest(function(){
 
 	this.testCachedMediaFolder = function(test){
 
-		var path = testConfig.baseTestMediaFolder + '/cache_folder_test';
+		var path = pathLib.join(testConfig.baseTestMediaFolder, 'cache_folder_test');
 
 		//create a test folder
 		fs.mkdirSync(path);

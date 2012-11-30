@@ -7,6 +7,8 @@ var TEST_FUNC_PATT = /test/;
 
 var TEST_TIMEOUT = 1000 * 1; //5 seconds
 
+var STOP_AT_ERROR = false;//move that to a arg when running the tests
+
 /**
  * UnitTest object
  */
@@ -116,10 +118,14 @@ var UnitTest = module.exports = function(unitTest) {
 				endCheckerTimer = setTimeout(cancelRunnintTestCase, newValue);
 			},
 
-			fail:function(desc){
+			fail:function(desc, err){
 				cleanRun = false;
 				console.log('(FAIL) - ' + testFunc + ' XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
-				console.trace('--> ' +  desc);
+				
+				if(err.stack){
+					console.log('--> ' +  desc + '\n' + err.stack);
+				}
+				//console.trace('--> ' +  desc);
 				//console.trace(
 			},
 
@@ -326,7 +332,7 @@ var UnitTest = module.exports = function(unitTest) {
 		//timer that watch for tests that forget to call the end() function
 		var endCheckerTimer = setTimeout(cancelRunnintTestCase, TEST_TIMEOUT);
 		
-		if(unitTest.stopAtError){
+		if(STOP_AT_ERROR){
 			//invoke the function passing the testContext
 			unitTest[testFunc].call(testContext, testContext);
 		}
@@ -337,7 +343,7 @@ var UnitTest = module.exports = function(unitTest) {
 			}
 			catch(err){
 				cleanRun = false;
-				testContext.fail('Error: ' + err);
+				testContext.fail('Error: ' + err, err);
 				testContext.end();
 			}
 		}

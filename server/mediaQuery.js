@@ -1,25 +1,34 @@
-var MediaFolder = require('./mediaFolder');
+//var mediaFolder = require('./mediaFolder');
 var Promisse = require("./promisse");
-var Util = require("./util");
+var util = require("./util");
 
-//Media List object
-var MediaList = function(){
-	var mediaItems = this.mediaItems = new Array();
-	Util.asCollection(this, mediaItems);
-};
+var mediaStore = require('./mediaStore');
 
 //list all media available in the server
 function listAll(){
-	//var mediaList = new MediaList();
-	var mediaList = new Array();
-	Util.asCollection(mediaList);
-	
-	var p = new Promisse().filterChain(function(results){
-		return mediaList;//return the mediaList
+	var p = new Promisse();
+
+	var searchResults = mediaStore.search("*");
+	util.asCollection(searchResults.docs);
+
+	var resultList = util.collection([]);
+
+	//copy list of docs
+	resultList.copy(searchResults.docs, function(doc){
+		//copy handler
+		return {
+			title : doc.title,
+			year  : doc.year,
+			path  : doc.path,
+			info  : doc.info
+		};
 	});
-	
-	p.resolve();
-	
+
+	p.resolve({
+		total:searchResults.total,
+		pageSize:searchResults.docs.length,
+		list:resultList
+	});
 	return p;
 }
 

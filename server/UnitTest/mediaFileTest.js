@@ -12,8 +12,8 @@ var UnitTest = require('./unitTest');
 //load test config
 var testConfig = JSON.parse(fs.readFileSync('./testConfig.json'));
 
-var comedyFolder = MediaFolder.get({path:testConfig.baseTestMediaFolder + '/My Movie Archive/Comedy', type:'movies'});
-var newMoviesFolder = MediaFolder.get({path:testConfig.baseTestMediaFolder + '/New Movies', type:'movies'});
+var comedyFolder = MediaFolder.get({path:pathLib.join(testConfig.baseTestMediaFolder, 'My Movie Archive', 'Comedy'), type:'movies'});
+var newMoviesFolder = MediaFolder.get({path:pathLib.join(testConfig.baseTestMediaFolder, 'New Movies'), type:'movies'});
 
 var MediaFileTest = module.exports = new UnitTest(function(){
 	//test loading the info file
@@ -42,6 +42,13 @@ var MediaFileTest = module.exports = new UnitTest(function(){
 		mediaFolder = MediaFolder.get({path:testConfig.baseTestMediaFolder + '/New Movies', type:'movies'});
 
 		var mediaFile = new MediaFile(fileName, mediaFolder);
+
+		mediaFile.on(MediaFile.CHANGED_EVENT, function(mediaFile, changes){	
+			
+			test.assertNotNull(mediaFile, 'valid mediaFile');
+			test.assertNotNull(changes, 'valid changes');
+
+		});	
 
 		mediaFile.loadInfoFile()
 			.done(function(info){

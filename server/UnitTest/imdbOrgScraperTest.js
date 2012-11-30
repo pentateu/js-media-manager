@@ -10,7 +10,7 @@ var UnitTest = require('./unitTest');
 //load test config
 var testConfig = JSON.parse(fs.readFileSync('./testConfig.json'));
 
-var comedyFolder = MediaFolder.get({path:testConfig.baseTestMediaFolder + '/My Movie Archive/Comedy', type:'movies'});
+var comedyFolder = MediaFolder.get({path:pathLib.join(testConfig.baseTestMediaFolder, 'My Movie Archive', 'Comedy'), type:'movies'});
 
 var imdbOrgScraper = require('../Scrapers/imdbOrgScraper')
 
