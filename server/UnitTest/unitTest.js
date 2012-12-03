@@ -122,8 +122,11 @@ var UnitTest = module.exports = function(unitTest) {
 				cleanRun = false;
 				console.log('(FAIL) - ' + testFunc + ' XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
 				
-				if(err.stack){
+				if(err && err.stack){
 					console.log('--> ' +  desc + '\n' + err.stack);
+				}
+				else{
+					console.log('--> ' +  desc);
 				}
 				//console.trace('--> ' +  desc);
 				//console.trace(
@@ -255,13 +258,16 @@ var UnitTest = module.exports = function(unitTest) {
 					this.fail(description +  " - Value should be true - value: " + value);
 				}
 			},
-			assertThrows:function(func, description){
+			assertThrows:function(func, description, checkErrorFunc){
 				try{
 					func();
 					this.fail(description);
 				}
 				catch(err){
 					//good
+					if(checkErrorFunc){
+						checkErrorFunc(err);
+					}
 				}
 			},
 			assertNotThrows:function(func, description){

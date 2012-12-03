@@ -16,6 +16,33 @@ var comedyFolder = MediaFolder.get({path:pathLib.join(testConfig.baseTestMediaFo
 var newMoviesFolder = MediaFolder.get({path:pathLib.join(testConfig.baseTestMediaFolder, 'New Movies'), type:'movies'});
 
 var MediaFileTest = module.exports = new UnitTest(function(){
+	
+	this.test_ERROR_FILENAME_REQUIRED = function (test){
+		test.assertThrows(
+			function (){
+				new MediaFile(null);
+			}, 
+			'ERROR_FILENAME_REQUIRED exception',
+			function (err){
+				test.assertTrue(MediaFile.ERROR_FILENAME_REQUIRED.match(err), 'match error and exception');
+			});
+
+		test.end();
+	};
+
+	this.test_ERROR_MEDIAFOLDER_REQUIRED = function (test){
+		test.assertThrows(
+			function (){
+				new MediaFile('file name', null);
+			}, 
+			'ERROR_MEDIAFOLDER_REQUIRED exception',
+			function (err){
+				test.assertTrue(MediaFile.ERROR_MEDIAFOLDER_REQUIRED.match(err), 'match error and exception');
+			});
+
+		test.end();
+	};
+
 	//test loading the info file
 	this.testLoadInfoFile = function(test){
 		test.name = "Test MediaFile.loadInfoFile() for an existing info file.";

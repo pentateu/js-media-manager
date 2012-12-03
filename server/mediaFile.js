@@ -19,10 +19,10 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 
 	//validate parameters
 	if( ! fileName){
-		throw MediaFile.ERROR_FILENAME_REQUIRED;
+		throw MediaFile.ERROR_FILENAME_REQUIRED.error();
 	}
 	if( ! mediaFolder){
-		throw MediaFile.ERROR_MEDIAFOLDER_REQUIRED;
+		throw MediaFile.ERROR_MEDIAFOLDER_REQUIRED.error();
 	}
 
 	if( ! ext){
@@ -137,7 +137,7 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 				p.resolve(info);
 			}
 			catch(err){
-				p.reject(MediaFile.ERROR_INFO_CANT_PARSE.setCause(err));
+				p.reject(MediaFile.ERROR_INFO_CANT_PARSE.cause(err).error());
 				return p;
 			}
 		});
@@ -145,6 +145,8 @@ var MediaFile = module.exports = function(fileName, mediaFolder, ext) {
 	};
 
 };
+
+util.inherits(MediaFile, EventEmitter);
 
 /////////////////////////////////////////
 // Static Methods //
@@ -245,7 +247,7 @@ var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFold
 			.fail(function(err){
 				//failed to load the info file
 				//check error code
-				if(err === MediaFile.ERROR_INFO_CANT_OPEN || err === MediaFile.ERROR_INFO_CANT_PARSE){
+				if(MediaFile.ERROR_INFO_CANT_OPEN.match(err) || MediaFile.ERROR_INFO_CANT_PARSE.match(err)){
 					console.log('info not found, or could not be opened - scrape from the internet!');
 					
 					//Condition 2: info scraped
@@ -273,6 +275,8 @@ var loadMediaFile = MediaFile.loadMediaFile = function(path, fileName, mediaFold
 	}
 	return myPromisse;
 };
+
+
 
 //CleanUp object
 var CleanUp = function(opt){
@@ -375,7 +379,7 @@ MediaFile.getYear = function(fileName){
 	}
 };
 
-util.inherits(MediaFile, EventEmitter);
+
 
 //constants
 //events

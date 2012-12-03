@@ -1,9 +1,15 @@
-var Promisse 	= require('./promisse');
-var Util 		= require('./util');
+/*jslint bitwise: true, white: true */
+"use strict";
+
+var Promisse, util, 
+
+//dependencies
+Promisse = require('./promisse');
+util = require('./util');
 
 //scrapers list
 var scraperList = new Array();
-Util.asCollection(scraperList);
+util.asCollection(scraperList);
 
 //add scrapers to the list
 //scraperList.add(require('./Scrapers/imdbScraper'));

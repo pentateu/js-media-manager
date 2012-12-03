@@ -5,10 +5,10 @@ var util = require("./util");
 var mediaStore = require('./mediaStore');
 
 //list all media available in the server
-function listAll(){
+function search(query){
 	var p = new Promisse();
 
-	var searchResults = mediaStore.search("*");
+	var searchResults = mediaStore.search(query);
 	util.asCollection(searchResults.docs);
 
 	var resultList = util.collection([]);

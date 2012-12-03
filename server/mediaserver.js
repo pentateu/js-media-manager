@@ -29,7 +29,7 @@ var MediaServer = module.exports = function(options) {
 	    	var postData = "";
 		    request.addListener("data", function(postDataChunk) {
 		      postData += postDataChunk;
-		      console.log("Received POST data chunk '" + postDataChunk + "'.");
+		      //console.log("Received POST data chunk '" + postDataChunk + "'.");
 		    });
 
 		    request.addListener("end", function() {

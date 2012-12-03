@@ -1,26 +1,36 @@
 //controllers mapping
 var mediaQuery = require("./mediaQuery");
 
-function listAllMedia(response, post){
+function respond (response, result){
+	var body = JSON.stringify(response);
+	response.writeHead(200, {"Content-Type": "application/json"});
+    response.write(body);
+    response.end();
+}
 
-	mediaQuery.listAll()
+function handleError (response, err){
+	response.writeHead(500, {"Content-Type": "text/plain"});
+	response.write("The following unexpected error occurred : " + err);
+    response.end();
+}
+
+//List all Media
+exports.listAllMedia = function (response, post){
+	mediaQuery.search("*")
 		.done(function(list){
-			var body = JSON.stringify(list);
- 
-			response.writeHead(200, {"Content-Type": "application/json"});
-
-		    response.write(body);
-		    
-		    response.end();
+			respond(response, list);
 		})
 		.fail(function(err){
-			response.writeHead(500, {"Content-Type": "text/plain"});
-			    
-			response.write("The following unexpected error occurred : " + err);
-		    
-		    response.end();
+			handleError(response, err);
 		});
 }
 
-//export members of the module
-exports.listAllMedia = listAllMedia;
+exports.searchMedia = function (response, post){
+	mediaQuery.search(post.searchQuery)
+		.done(function(list){
+			respond(response, list);
+		})
+		.fail(function(err){
+			handleError(response, err);
+		});
+}

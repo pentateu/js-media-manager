@@ -8,9 +8,15 @@ var mediaStoreTest = module.exports = new UnitTest(function(){
 	
 	this.stopAtError = true;
 	
-	
+	function mockMediaFile (obj) {
+		obj.on = function (){
+			//do nothing
+		};
+		return obj;
+	}
+
 	//add an item to the store
-	mediaStore.add({
+	mediaStore.add(mockMediaFile({
 		title:'The Expendables',
 		year:2012,
 		path:'/path/Expendables.mkv',
@@ -21,8 +27,8 @@ var mediaStoreTest = module.exports = new UnitTest(function(){
 				imdb_id:'tt987238744'
 			}
 		}
-	});
-	mediaStore.add({
+	}));
+	mediaStore.add(mockMediaFile({
 		title:'The Expendables 2',
 		year:2012,
 		path:'/path/Expendables2.mkv',
@@ -33,8 +39,8 @@ var mediaStoreTest = module.exports = new UnitTest(function(){
 				imdb_id:'tt9879869'
 			}
 		}
-	});
-	mediaStore.add({
+	}));
+	mediaStore.add(mockMediaFile({
 		title:'Rock 5',
 		year:2012,
 		path:'/path/Rock5.mkv',
@@ -45,7 +51,7 @@ var mediaStoreTest = module.exports = new UnitTest(function(){
 				imdb_id:'tt876337634'
 			}
 		}
-	});
+	}));
 	
 	this.testJSiiSearch = function(test){
 		
@@ -86,9 +92,10 @@ var mediaStoreTest = module.exports = new UnitTest(function(){
 		mediaStore.clear();
 		
 		//add an item to the store
-		mediaStore.add({
+		mediaStore.add(mockMediaFile({
 			title:'The Expendables',
 			year:2011,
+			path:'/path/TheExpendables.mkv',
 			info:{
 				watched:'true',
 				imdb:{
@@ -96,10 +103,11 @@ var mediaStoreTest = module.exports = new UnitTest(function(){
 					imdb_id:'tt987238744'
 				}
 			}
-		});
-		mediaStore.add({
+		}));
+		mediaStore.add(mockMediaFile({
 			title:'The Expendables 2',
 			year:2012,
+			path:'/path/TheExpendables2.mkv',
 			info:{
 				watched:'true',
 				imdb:{
@@ -107,10 +115,11 @@ var mediaStoreTest = module.exports = new UnitTest(function(){
 					imdb_id:'tt9879869'
 				}
 			}
-		});
-		mediaStore.add({
+		}));
+		mediaStore.add(mockMediaFile({
 			title:'Rock 5',
 			year:2010,
+			path:'/path/rock5.mkv',
 			info:{
 				watched:'true',
 				imdb:{
@@ -118,7 +127,7 @@ var mediaStoreTest = module.exports = new UnitTest(function(){
 					imdb_id:'tt876337634'
 				}
 			}
-		});
+		}));
 		
 		//search item from the store
 		var result = mediaStore.search('year:2010');

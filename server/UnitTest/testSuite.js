@@ -2,7 +2,7 @@ var UnitTest = require('./unitTest');
 
 var tests = new Array();
 
-var online = false;
+var online = true;
 
 //add tests
 

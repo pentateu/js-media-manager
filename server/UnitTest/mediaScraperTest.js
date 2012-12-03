@@ -31,7 +31,7 @@ var MediaScraperTest = module.exports = new UnitTest(function(){
 				//media info
 				test.assertNotNull(info, 'info shoult not be null');
 
-				test.assertEqual(info.imdb.id, "tt0976247", 'imdb id');
+				test.assertEqual(info.imdb.imdb_id, "tt0976247", 'imdb id');
 
 				test.assertEqual(info.imdb.title, "Surfer, Dude", 'imdb title');
 
@@ -44,9 +44,9 @@ var MediaScraperTest = module.exports = new UnitTest(function(){
 
 	this.testIMDBSearch_titlePopular = function(test){
 		//set the a higher timeout since this will connect to the internet to the imdb website
-		test.newTimeOut(2 * 1000);//5 seconds
+		test.newTimeOut(2 * 1000);//2 seconds
 
-		var fileName = 'The Expendables 2.mkv';
+		var fileName = 'The Expendables.mkv';
 		var mediaFile = new MediaFile(fileName, comedyFolder);
 
 		var mediaScraper = new MediaScraper(mediaFile);
@@ -55,14 +55,14 @@ var MediaScraperTest = module.exports = new UnitTest(function(){
 			.done(function(info){
 				//media info
 				test.assertNotNull(info, 'info shoult not be null');
-				test.assertEqual(info.imdb.id, "tt1764651", 'imdb id');
-				test.assertEqual(info.imdb.title, "The Expendables 2", 'imdb title');
+				test.assertEqual(info.imdb.imdb_id, "tt1320253", 'imdb id');
+				test.assertEqual(info.imdb.title, "The Expendables", 'imdb title');
 
 				//check candidates
 				test.assertNotNull(info.candidates, 'candidates shoult not be null');
 				test.assertEqual(info.candidates.length, 1, 'one candidate');
-				test.assertEqual(info.candidates[0].imdb.id, "tt1320253", 'imdb id');
-				test.assertEqual(info.candidates[0].imdb.title, "The Expendables", 'imdb title');
+				test.assertEqual(info.candidates[0].imdb.imdb_id, "tt1764651", 'imdb id');
+				test.assertEqual(info.candidates[0].imdb.title, "The Expendables 2", 'imdb title');
 
 				test.end();
 			})

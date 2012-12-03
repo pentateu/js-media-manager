@@ -87,7 +87,7 @@ var ImdbOrgScraperTest = module.exports = new UnitTest(function(){
 				test.assertEqual(info.imdb.imdb_id, "tt1217209", 'imdb id');
 				test.assertEqual(info.imdb.title, "Brave", 'imdb title');
 				test.assertEqual(info.imdb.runtime[0], "93 min", 'imdb runtime');
-				test.assertEqual(info.imdb.rating, 7.4, 'imdb rating');
+				test.assertEqual(info.imdb.rating, 7.3, 'imdb rating');
 
 				test.assertEqual(info.imdb.genres[0], "Animation", 'imdb genres');
 				test.assertEqual(info.imdb.genres[1], "Action", 'imdb genres');

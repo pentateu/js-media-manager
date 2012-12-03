@@ -3,12 +3,12 @@ var pathLib 		= require('path');
 var events 			= require("events");
 var EventEmitter 	= events.EventEmitter;
 
-var Util 			= require('./util');
+var util 			= require('./util');
 var MediaFile 		= require('./mediaFile');
 var Promisse 		= require("./promisse");
 
 //check if the global cache exists
-if( ! global.__MediaFolderCache){
+if(!global.__MediaFolderCache){
 	global.__MediaFolderCache = {};
 }
 
@@ -20,7 +20,7 @@ function removeFromCache(path){
 
 //exposed only the factory object
 var Factory = module.exports = {
-	get:function(folderInfo) {
+	get: function (folderInfo) {
 		//check for cached version
 		if(mediaFolderCache[folderInfo.path]){
 			return mediaFolderCache[folderInfo.path];
@@ -31,7 +31,7 @@ var Factory = module.exports = {
 			return newMediaFolder;
 		}
 	},
-	clearCache:function(){
+	clearCache: function (){
 		mediaFolderCache = global.__MediaFolderCache = {};
 	}
 };
@@ -61,13 +61,13 @@ var MediaFolder = function(folderInfo) {
 	var parent 		= this.parent 	= folderInfo.parent;
 	var path 		= this.path 	= folderInfo.path;
 
-	////Util.debug('MediaFolder created for path:' + path + ' parent: ' + parent);
+	////util.debug('MediaFolder created for path:' + path + ' parent: ' + parent);
 
 	//list of mediaFiles found in this folder
-	var mediaFileList = Util.asCollection(new Array());
+	var mediaFileList = util.asCollection(new Array());
 	this.__defineGetter__("mediaFileList", function(){return mediaFileList});//mediaFileList is a read only property
 
-	var subFolders = Util.asCollection(new Array());
+	var subFolders = util.asCollection(new Array());
 	this.__defineGetter__("subFolders", function(){return subFolders});//subFolders is a read only property
 
 	//use to map the mediaFile by file name
@@ -84,7 +84,7 @@ var MediaFolder = function(folderInfo) {
 			//INVALID
 			setState(INVALID);
 			if(err){
-				Util.error(err);
+				util.error(err);
 			}
 		}
 	});
@@ -104,7 +104,7 @@ var MediaFolder = function(folderInfo) {
 			return p;
 		}
 		//list of files added, it is used to pass in the event as a parameter
-		var mediaFilesAdded = Util.asCollection(new Array());
+		var mediaFilesAdded = util.asCollection(new Array());
 		
 		//go through each of the files to be added
 		files.iterate(function(it, item){
@@ -124,7 +124,7 @@ var MediaFolder = function(folderInfo) {
 				});
 		},
 		function(){
-			//Util.debug('all files added for path:' + path);
+			//util.debug('all files added for path:' + path);
 			mediaFolder.emit(FILES_ADDED_EVENT, mediaFilesAdded);
 			p.resolve(mediaFilesAdded);
 		});
@@ -134,7 +134,7 @@ var MediaFolder = function(folderInfo) {
 	this.addSubFolderFiles = function(folders){
 		var p = new Promisse();
 		if(folders.size() == 0){
-			//Util.debug('addSubFolderFiles() no sub folders to add');
+			//util.debug('addSubFolderFiles() no sub folders to add');
 			//no folders to process
 			p.resolve();
 			return p;
@@ -148,7 +148,7 @@ var MediaFolder = function(folderInfo) {
 		function(){
 			//update all sub folders
 			subFolders.iterate(function(it, item){
-				//Util.debug('updating subfolder path:' + item.path);
+				//util.debug('updating subfolder path:' + item.path);
 				p.chain(item.update());
 				it.next();
 			},
@@ -164,13 +164,13 @@ var MediaFolder = function(folderInfo) {
 		
 
 		if(allFiles.size() == 0){
-			//Util.debug('reconcile() no files/folders to reconcile');
+			//util.debug('reconcile() no files/folders to reconcile');
 			p.resolve();
 			return p;
 		}
 
-		var mediaFilesNotFound = Util.asCollection(new Array());
-		var subFoldersNotFound = Util.asCollection(new Array());
+		var mediaFilesNotFound = util.asCollection(new Array());
+		var subFoldersNotFound = util.asCollection(new Array());
 
 		//go through all mediaFiles and check which ones no longer exists
 		mediaFileList.forEach(function(mediaFileItem, idx){
@@ -242,19 +242,19 @@ var MediaFolder = function(folderInfo) {
 			return p;
 		}
 
-		//Util.debug('running processFiles() for path: ' + path);
+		//util.debug('running processFiles() for path: ' + path);
 
-		var filesFound		= Util.asCollection(new Array());
-		var subFoldersFound = Util.asCollection(new Array());
+		var filesFound		= util.asCollection(new Array());
+		var subFoldersFound = util.asCollection(new Array());
 
 		//record all items found (files and folders) to reconcile and remove those that no longer exist
-		var allFound = Util.asCollection(new Array());
+		var allFound = util.asCollection(new Array());
 
 		//check each item
 		files.forEach(function(file){
 			//ful path
 			var fullPath = pathLib.resolve(path, file);
-			////Util.debug('processFiles() fullPath: ' + fullPath);
+			////util.debug('processFiles() fullPath: ' + fullPath);
 			try{
 				//check if its a file or folder
 				var stats = fs.statSync(fullPath);
@@ -276,15 +276,15 @@ var MediaFolder = function(folderInfo) {
 				}
 				else{
 					//file type not supported
-					Util.warn('[MediaFolder] (WARNING) File stat not supported: ' + fullPath);
+					util.warn('[MediaFolder] (WARNING) File stat not supported: ' + fullPath);
 				}
 			}
 			catch(e){
-				Util.warn('[MediaFolder] (WARNING) Error checking file/folder: ' + fullPath + ' err: ' + Util.inspect(e) + '\n(processFiles) for folder: ' + path);
+				util.warn('[MediaFolder] (WARNING) Error checking file/folder: ' + fullPath + ' err: ' + util.inspect(e) + '\n(processFiles) for folder: ' + path);
 			}
 		});
 
-		//Util.debug('process filesFound : ' + filesFound.size() + ' subfolders found: ' + subFoldersFound.size());
+		//util.debug('process filesFound : ' + filesFound.size() + ' subfolders found: ' + subFoldersFound.size());
 		//1 process the files found
 		p.chain(mediaFolder.addFiles(filesFound));
 		//2 process the subfolders
@@ -301,13 +301,13 @@ var MediaFolder = function(folderInfo) {
 	//look for subfolders, more mediaFiles and etc
 	this.update = function(){
 		if(state === UPDATING || state === INVALID){
-			//Util.debug('folder already updating!');
+			//util.debug('folder already updating!');
 			return;
 		}
 		//set the status
 		state = UPDATING;
 		
-		//Util.debug('mediaFolder.update() for path:' + path);
+		//util.debug('mediaFolder.update() for path:' + path);
 		
 		var p = new Promisse();		
 		
@@ -315,15 +315,15 @@ var MediaFolder = function(folderInfo) {
 		fs.readdir(path, function(err, files){
 			//check for errors
 			if (err){
-				console.log('Error on fs.readdir() for path : ' + path + ' err: ' + Util.inspect(err));
+				console.log('Error on fs.readdir() for path : ' + path + ' err: ' + util.inspect(err));
 				setState(INVALID);
 				p.reject(err);
 			}
 			else{
-				//Util.debug('fs.readdir() for path:' + path);
+				//util.debug('fs.readdir() for path:' + path);
 				mediaFolder.processFiles(files)
 					.done(function(){
-						//Util.debug('UPDATE_COMPLETE_EVENT for path:' + path);
+						//util.debug('UPDATE_COMPLETE_EVENT for path:' + path);
 						//when all 3 steps are completed
 						setState(UP_TO_DATE);
 						mediaFolder.emit(UPDATE_COMPLETE_EVENT, mediaFolder);
@@ -338,4 +338,4 @@ var MediaFolder = function(folderInfo) {
 	};
 };
 
-Util.inherits(MediaFolder, EventEmitter);
+util.inherits(MediaFolder, EventEmitter);
