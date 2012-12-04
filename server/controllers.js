@@ -2,7 +2,7 @@
 var mediaQuery = require("./mediaQuery");
 
 function respond (response, result){
-	var body = JSON.stringify(response);
+	var body = JSON.stringify(result);
 	response.writeHead(200, {"Content-Type": "application/json"});
     response.write(body);
     response.end();
@@ -15,7 +15,7 @@ function handleError (response, err){
 }
 
 //List all Media
-exports.listAllMedia = function (response, post){
+exports.listAllMedia = function (response, query, post){
 	mediaQuery.search("*")
 		.done(function(list){
 			respond(response, list);
@@ -25,7 +25,7 @@ exports.listAllMedia = function (response, post){
 		});
 }
 
-exports.searchMedia = function (response, post){
+exports.searchMedia = function (response, query, post){
 	mediaQuery.search(post.searchQuery)
 		.done(function(list){
 			respond(response, list);

@@ -1,9 +1,9 @@
-//Unit test for assert.js file
+//Unit test for util.js file
 var util = require("../util");
-var assert = require("assert");
+//var assert = require("assert");
 var UnitTest = require('./unitTest');
 
-var utilTest = module.exports = new UnitTest(function (){
+module.exports = new UnitTest(function (){
 	
 	this.testExceptionCode = function (test){
 		var excp = util.exception({message:'message test!'});
@@ -178,4 +178,4 @@ var utilTest = module.exports = new UnitTest(function (){
 	
 });
 
-utilTest.setup(module);
+module.exports.setup(module);

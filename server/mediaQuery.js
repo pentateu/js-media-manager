@@ -5,7 +5,7 @@ var util = require("./util");
 var mediaStore = require('./mediaStore');
 
 //list all media available in the server
-function search(query){
+exports.search = function (query){
 	var p = new Promisse();
 
 	var searchResults = mediaStore.search(query);
@@ -30,6 +30,4 @@ function search(query){
 		list:resultList
 	});
 	return p;
-}
-
-exports.listAll = listAll;
+};
