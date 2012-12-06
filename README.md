@@ -16,6 +16,12 @@ and run:
 <br>
 <code>node main</code>
 
+<h3>Queries samples to run on the browser</h3>
+- Search by year: <code>http://localhost:9090/searchMedia?searchQuery=year:2012</code>
+- Search by Title: <code>http://localhost:9090/searchMedia?searchQuery=expendables</code>
+
+<b>NOTE</b> The query will be improved and the parameters format in the URL might change.
+
 <h2>Unit Testing</h2>
 <h3>How to setup the unit testing on your machine:</h3>
 - Open the config file : <code><YOUR_REPO_FOLDER>/js-media-manager/server/UnitTest/testConfig.json</code>

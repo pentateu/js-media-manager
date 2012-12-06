@@ -1,7 +1,7 @@
-var Util = require('./util');
+var util = require('./util');
 
 //promisse object definition
-var Promisse = module.exports = function(options) {
+var Promisse = module.exports = function (options) {
 	//make sure it behaves as a constructor
 	if ( ! (this instanceof Promisse) ) {
 		return new Promisse(options);
@@ -15,7 +15,7 @@ var Promisse = module.exports = function(options) {
 	 * 1 : done / resolved
 	 * 2 : fail / rejected
 	 */
-	this.state = PENDING;
+	instance.state = PENDING;
 
 	var args = null;//arguments sent when resolve was called
 
@@ -23,7 +23,7 @@ var Promisse = module.exports = function(options) {
 	var failHandlers = new Array();
 
 	var chainArgsArray = new Array();
-	var chainList = Util.asCollection(new Array());
+	var chainList = util.asCollection(new Array());
 	var chainErrors = new Array();
 	
 	//passAny : even if there is a failed chained promisse it will still call
@@ -31,24 +31,19 @@ var Promisse = module.exports = function(options) {
 	//failAll : if at least one chained promiss object has failed the entire chain fail
 	//and the fail handlers are called.
 	var chainBehaviour = FAIL_ALL;
-
-	//console.log('options : ' + JSON.stringify(options));
-
-	if(options && options.chainBehaviour){
-		setChainBehaviour(options.chainBehaviour);
-	}
-
-	function setChainBehaviour(value){
-		Util.validateParameter(value, [FAIL_ALL, PASS_ANY]);
-
+	
+	instance.setChainBehaviour = function (value){
+		util.validateParameter(value, [FAIL_ALL, PASS_ANY]);
 		//console.log('chainBehaviour set to: ' + value);
 		chainBehaviour = value;
 	}
-	this.setChainBehaviour = setChainBehaviour;
 	
+	if(options && options.chainBehaviour){
+		instance.setChainBehaviour(options.chainBehaviour);
+	}
 
 	//add a callback to be called when the promisse is 'done'
-	this.done = function(handler){
+	this.done = function (handler){
 		if(instance.state === RESOLVED){//invoke now !
 			handler.apply(instance, args);
 		}
@@ -60,7 +55,7 @@ var Promisse = module.exports = function(options) {
 	};
 
 	//add a callback to be called when the promisse has 'failed'
-	this.fail = function(handler){
+	this.fail = function (handler){
 		if(instance.state === REJECTED){//invoke now
 			handler.apply(instance, args);
 		}
@@ -72,7 +67,7 @@ var Promisse = module.exports = function(options) {
 	};
 
 	//resolve the promisse
-	this.resolve = function(){
+	this.resolve = function (){
 		if(chainList.size() > 0){
 			resolveChain();
 		}
@@ -90,7 +85,7 @@ var Promisse = module.exports = function(options) {
 	};
 	
 	//reject the promisse
-	this.reject = function(){
+	this.reject = function (){
 		args = arguments;
 		if(instance.state === PENDING){
 			instance.state = REJECTED;
@@ -103,7 +98,7 @@ var Promisse = module.exports = function(options) {
 	};
 
 	var filterChainFunc = null;
-	this.filterChain = function(func){
+	this.filterChain = function (func){
 		filterChainFunc = func;
 		return instance;
 	};
@@ -119,7 +114,7 @@ var Promisse = module.exports = function(options) {
 			else{
 				//when all chainned promisses has been finished, completes this promisse
 				//reset the chain
-				chainList = Util.asCollection(new Array());
+				chainList = util.asCollection(new Array());
 				
 				if(filterChainFunc){
 					//console.log(' *** invoking a filterChain *** ');
@@ -132,8 +127,8 @@ var Promisse = module.exports = function(options) {
 		}
 		
 		var count = 0;
-		chainList.forEach(function(anotherPromisse){
-			anotherPromisse.done(function(){
+		chainList.forEach(function (anotherPromisse){
+			anotherPromisse.done(function (){
 				chainArgsArray.push(arguments);
 				//when any event happens in the other promisse
 				count++;
@@ -141,7 +136,7 @@ var Promisse = module.exports = function(options) {
 					chainResolved();
 				}
 			})
-			.fail(function(err){
+			.fail(function (err){
 				chainErrors.push(err);
 				//when any event happes in the other promisse
 				count++;
@@ -153,12 +148,12 @@ var Promisse = module.exports = function(options) {
 	};
 
 	//chain another promisse
-	this.chain = function(anotherPromisse){
+	this.chain = function (anotherPromisse){
 		if(instance.state === PENDING){ //can only chain promisses when is still at a pending instance.state
 			chainList.add(anotherPromisse);
 		}
 		else{
-			Util.debug("[Promisse] (WARNING) cannot chain any more primisses, state is now: " + instance.state);
+			util.debug("[Promisse] (WARNING) cannot chain any more primisses, state is now: " + instance.state);
 		}
 		return instance;
 	};
@@ -171,6 +166,3 @@ var REJECTED 	= Promisse.REJECTED = "rejected";
 
 var PASS_ANY 	= Promisse.PASS_ANY = "passAny";
 var FAIL_ALL 	= Promisse.FAIL_ALL = "failAll";
-
-
-//exports.newPromisse = function(options){return new Promisse(options)};

@@ -1,5 +1,6 @@
 //controllers mapping
 var mediaQuery = require("./mediaQuery");
+var util = require('./util');
 
 function respond (response, result){
 	var body = JSON.stringify(result);
@@ -26,7 +27,12 @@ exports.listAllMedia = function (response, query, post){
 }
 
 exports.searchMedia = function (response, query, post){
-	mediaQuery.search(post.searchQuery)
+	//validate parameters
+	if(!query.searchQuery){
+		handleError(response, exports.SEARCH_QUERY_PARAM_MISSING.error());
+	}
+
+	mediaQuery.search(query.searchQuery)
 		.done(function(list){
 			respond(response, list);
 		})
@@ -34,3 +40,5 @@ exports.searchMedia = function (response, query, post){
 			handleError(response, err);
 		});
 }
+
+exports.SEARCH_QUERY_PARAM_MISSING = util.exception({message:"The parameter searchQuery is missing in the query string."});

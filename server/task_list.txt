@@ -1,0 +1,6 @@
+1) make the searchMedia method work
+ --> Is working now.. I might think to improve the way parameters are passed.. and also when searching for year is not working fotr all movies.. 2012 works fine,, but other years does not return any results.
+
+ --> work on pagination.
+
+2) Start implementing the front-end
